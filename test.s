@@ -6,7 +6,8 @@
 %endmacro
 
 %macro NEXT 0
-	lodsq ; mov rax,[rsi] ; lea rsi,[rsi+8]
+	mov	rax, [rbx]
+	lea	rbx, [rbx+8]
 	jmp	[rax]
 %endmacro
 
@@ -56,23 +57,23 @@ stack_end:
 ;;;;;;; Forth structure ;;;;;;;
 	section .text
 
-; RSP = Stack (push/pop)
-; RBP = Return stack (RPUSH/RPOP)
-; RSI = Next code word
-; RAX = This code word (can be discarded)
+; RSP = Stack (manip. with push/pop)
+; RBP = Return stack (manip. with RPUSH/RPOP)
+; RBX = Next code word (callee-saved register)
+; RAX = This code word (volatile register)
 
 DOCOL:
-	RPUSH	rsi
-	lea	rsi, [rax+8]
+	RPUSH	rbx
+	lea	rbx, [rax+8]
 NEXT
 
 ASMWORD EXIT,"EXIT"
-	RPOP	rsi
+	RPOP	rbx
 NEXT
 
 ASMWORD LIT,"LIT"
-	push	qword [rsi]
-	lea	rsi, [rsi+8]
+	push	qword [rbx]
+	lea	rbx, [rbx+8]
 NEXT
 
 ASMWORD DUP,"DUP"
@@ -88,6 +89,26 @@ ASMWORD ADD,"+"
 	add	[rsp], rax
 NEXT
 
+;;;;;;; I/O ;;;;;;;
+
+	section .bss
+ebuf: resb 1
+wbuf: resb 64
+	section .data
+wbuftop: dq wbuf
+
+	section .text
+
+ASMWORD EMIT,"EMIT"
+	pop	rax
+	mov	rsi, ebuf
+	mov	byte [rsi], al
+	mov	rax, SYS_WRITE
+	mov	rdi, STDOUT
+	mov	rdx, 1
+	syscall
+NEXT
+
 ;;;;;;; Testing code ;;;;;;;
 	section .text
 
@@ -98,7 +119,8 @@ double:
 	dq	DOCOL, DUP, ADD, EXIT
 
 testword:
-	dq	DOCOL, LIT, 2, double, double, plusone, temp_exit
+	;dq	DOCOL, LIT, 2, double, double, plusone, temp_exit
+	dq	DOCOL, LIT, 0x4D, EMIT, LIT, 10, EMIT, LIT, 13, temp_exit
 
 ASMWORD temp_exit,""
 	mov	rax, SYS_EXIT
@@ -108,7 +130,7 @@ ASMWORD temp_exit,""
 	global _start
 _start:
 	INIT_STACKS
-	mov	rsi, entry_point
+	mov	rbx, entry_point
 	NEXT
 
 	section .data
