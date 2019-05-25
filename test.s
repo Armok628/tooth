@@ -96,9 +96,9 @@ testword:
 	dq	DOCOL, LIT, 2, double, double, plusone, temp_exit
 
 ASMWORD temp_exit,""
-	mov	eax, 1
-	pop	rbx
-	int	0x80
+	mov	rax, 60
+	pop	rdi
+	syscall
 
 	global _start
 _start:
