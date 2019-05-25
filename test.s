@@ -6,8 +6,7 @@
 %endmacro
 
 %macro NEXT 0
-	mov	rax, rsi
-	lea	rsi, [rsi+8]
+	lodsq ; mov rax,[rsi] ; lea rsi,[rsi+8]
 	jmp	[rax]
 %endmacro
 
@@ -24,19 +23,21 @@
 %define LASTWORD 0
 
 %macro ASMWORD 2-3 0
-	%strlen l %2
 	section	.rodata
-	%{1}_DICT:
+%1_DICT:
 	dq	%[LASTWORD]
 	%define LASTWORD %1
+	%strlen l %2
 	db	%3+%[l],%2,0
 	%undef l
-	dq	%1
+%1:
+	dq	%1_CODE
 	section	.text
-	%{1}:
+%1_CODE:
 %endmacro
 
-%define IMMEDIATE 0x80 ;1<<7
+%define IMM_F 0x80 ; 1<<7
+%define HID_F 0x40 ; 1<<6
 
 ;;;;;;; Stack space ;;;;;;;
 
@@ -47,22 +48,26 @@ stack:
 stack_end:
 
 
-;;;;;;; Forth primitives ;;;;;;;
-
-	section	.text
+;;;;;;; Forth structure ;;;;;;;
+	section .text
 
 ; RSP = Stack (push/pop)
 ; RBP = Return stack (RPUSH/RPOP)
-; RSI = "Instruction pointer"
-; RAX = Accumulator
+; RSI = Next code word
+; RAX = This code word (can be discarded)
 
-ASMWORD DOCOL,"DOCOL"
+DOCOL:
 	RPUSH	rsi
-	lea	rsi,[rax+8]
+	lea	rsi, [rax+8]
 NEXT
 
 ASMWORD EXIT,"EXIT"
 	RPOP	rsi
+NEXT
+
+ASMWORD LIT,"LIT"
+	push	qword [rsi]
+	lea	rsi, [rsi+8]
 NEXT
 
 ASMWORD DUP,"DUP"
@@ -79,11 +84,18 @@ ASMWORD ADD,"+"
 NEXT
 
 ;;;;;;; Testing code ;;;;;;;
+	section .text
 
-TESTING:
-	dq	DOCOL, DUP, ADD, exit
+plusone:
+	dq	DOCOL, LIT, 1, ADD, EXIT
 
-exit:
+double:
+	dq	DOCOL, DUP, ADD, EXIT
+
+testword:
+	dq	DOCOL, LIT, 2, double, double, plusone, temp_exit
+
+ASMWORD temp_exit,""
 	mov	eax, 1
 	pop	rbx
 	int	0x80
@@ -91,6 +103,9 @@ exit:
 	global _start
 _start:
 	INIT_STACKS
-	push	qword 2
-	mov	rsi, TESTING
+	mov	rsi, entry_point
 	NEXT
+
+	section .data
+entry_point:
+	dq	testword
