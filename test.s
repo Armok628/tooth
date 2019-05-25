@@ -38,6 +38,11 @@
 
 %define IMM_F 0x80 ; 1<<7
 %define HID_F 0x40 ; 1<<6
+%define SYS_READ 0
+%define STDIN 0
+%define SYS_WRITE 1
+%define STDOUT 1
+%define SYS_EXIT 60
 
 ;;;;;;; Stack space ;;;;;;;
 
@@ -96,7 +101,7 @@ testword:
 	dq	DOCOL, LIT, 2, double, double, plusone, temp_exit
 
 ASMWORD temp_exit,""
-	mov	rax, 60
+	mov	rax, SYS_EXIT
 	pop	rdi
 	syscall
 
