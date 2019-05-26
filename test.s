@@ -7,17 +7,17 @@
 
 %macro NEXT 0
 	mov	rax, [rbx]
-	lea	rbx, [rbx+8]
+	add	rbx, 8
 	jmp	[rax]
 %endmacro
 
 %macro RPUSH 1
 	mov	[rbp], %1
-	lea	rbp, [rbp+8]
+	add	rbp, 8
 %endmacro
 
 %macro RPOP 1
-	lea	rbp, [rbp-8]
+	sub	rbp, 8
 	mov	%1, [rbp]
 %endmacro
 
@@ -50,8 +50,8 @@ $%1:
 
 	section .bss
 
-cbuf:	resb	1
-stack:	resq	1024
+charbuf: resb 1
+stack: resq 1024
 
 
 ;;;;;;; Forth primitives ;;;;;;;
@@ -74,7 +74,7 @@ ASMWORD	EXIT, "EXIT"
 
 ASMWORD	LIT, "LIT"
 	push	qword [rbx]
-	lea	rbx, [rbx+8]
+	add	rbx, 8
 	NEXT
 
 ASMWORD	DUP, "DUP"
@@ -117,7 +117,7 @@ ASMWORD	BYE, "BYE"
 
 ASMWORD	EMIT, "EMIT"
 	pop	rax
-	mov	rsi, cbuf
+	mov	rsi, charbuf
 	mov	byte [rsi], al
 	mov	rax, SYS_WRITE
 	mov	rdi, STDOUT
@@ -131,9 +131,9 @@ ASMWORD	EMIT, "EMIT"
 
 	section .data
 
-buf: times BUFSIZE db 0
-nextkey: dq buf
-wbuf: times 64 db 0
+inputbuf: times BUFSIZE db 0
+nextkey: dq inputbuf
+wordbuf: times 64 db 0
 
 	section .text
 
@@ -152,19 +152,24 @@ _KEY:
 	push	rdi ; preserve for stosb
 	mov	rax, SYS_READ
 	mov	rdi, STDIN
-	mov	rsi, buf
+	mov	rsi, inputbuf
 	mov	rdx, BUFSIZE-1
 	syscall
 	pop	rdi
 	test	al, al
 	jz	BYE_CODE
-	mov	byte [buf+rax], 0
-	mov	qword [nextkey], buf+1
-	movzx	eax, byte [buf]
+	mov	byte [inputbuf+rax], 0
+	mov	qword [nextkey], inputbuf+1
+	movzx	eax, byte [inputbuf]
 	ret
 
 ASMWORD WORD, "WORD"
-	mov	rdi, wbuf
+	call	_WORD
+	push	wordbuf
+	push	rdi ; word length
+	NEXT
+_WORD:
+	mov	rdi, wordbuf
 .start:
 	call	_KEY
 	cmp	al, byte ' '
@@ -183,10 +188,8 @@ ASMWORD WORD, "WORD"
 	jne	.skip
 	jmp	.start
 .end:
-	push	wbuf
-	sub	rdi, wbuf
-	push	rdi
-	NEXT
+	sub	rdi, wordbuf
+	ret
 
 ;;;;;;; Testing code ;;;;;;;
 
