@@ -53,15 +53,18 @@ ASMWORD %1, %2
 	CONSTANT %1, %2, %1_VAR
 %endmacro
 
-%define F_IMM 0x80 ; 1<<7
-%define F_HID 0x40 ; 1<<6
-%define SYS_READ 0
-%define STDIN 0
-%define SYS_WRITE 1
-%define STDOUT 1
-%define SYS_EXIT 60
-%define SYS_FCNTL 72
-%define SYS_BRK 12
+;;;;;;; Assembler constants ;;;;;;;
+
+F_IMM equ 0x80
+F_HID equ 0x40
+STDIN equ 0
+STDOUT equ 1
+STDERR equ 2
+SYS_READ equ 0
+SYS_WRITE equ 1
+SYS_BRK equ 12
+SYS_EXIT equ 60
+SYS_FCNTL equ 72
 
 ;;;;;;; Return stack setup ;;;;;;;
 
