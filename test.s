@@ -62,7 +62,7 @@ stack_end:
 ; RBX = Next code word (callee-saved register)
 ; RAX = This code word (volatile register)
 
-COL:
+DOCOL:
 	RPUSH	rbx
 	lea	rbx, [rax+8]
 	NEXT
@@ -141,15 +141,15 @@ ASMWORD EMIT,"EMIT"
 	section .text
 
 plusone:
-	dq	COL, LIT, 1, ADD, EXIT
+	dq	DOCOL, LIT, 1, ADD, EXIT
 
 double:
-	dq	COL, DUP, ADD, EXIT
+	dq	DOCOL, DUP, ADD, EXIT
 
 testword:
-	;dq	COL, LIT, 2, double, double, plusone, temp_exit
-	;dq	COL, LIT, 0x4D, EMIT, LIT, 10, EMIT, LIT, 13, temp_exit
-	dq	COL, KEY, KEY, KEY, EMIT, ADD, temp_exit
+	;dq	DOCOL, LIT, 2, double, double, plusone, temp_exit
+	;dq	DOCOL, LIT, 0x4D, EMIT, LIT, 10, EMIT, LIT, 13, temp_exit
+	dq	DOCOL, KEY, KEY, KEY, EMIT, ADD, temp_exit
 
 ASMWORD temp_exit,""
 	mov	rax, SYS_EXIT
