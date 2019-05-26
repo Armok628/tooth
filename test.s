@@ -1,10 +1,5 @@
 ;;;;;;; Macros ;;;;;;;
 
-%macro INIT_STACKS 0
-	;mov	rsp, stack_end
-	mov	rbp, stack
-%endmacro
-
 %macro NEXT 0
 	mov	rax, [rbx]
 	add	rbx, 8
@@ -33,7 +28,7 @@
 	%undef l
 %endmacro
 
-%macro ASMWORD	2-3 0
+%macro ASMWORD 2-3 0
 	DICTLINK %1, %2, %3
 $%1:
 	dq	%1_ASM
@@ -41,22 +36,44 @@ $%1:
 %1_ASM:
 %endmacro
 
-%define IMM_F 0x80 ; 1<<7
-%define HID_F 0x40 ; 1<<6
+%macro FORTHWD 2-3+ 0
+	DICTLINK %1, %2, %3
+$%1:
+%endmacro
+
+%macro CONSTANT 3
+ASMWORD %1, %2
+	push	%3
+	NEXT
+%endmacro
+
+%macro VARIABLE 2-3 0
+	section .data
+%1_VAR: dq	%3
+	CONSTANT %1, %2, %1_VAR
+%endmacro
+
+%define F_IMM 0x80 ; 1<<7
+%define F_HID 0x40 ; 1<<6
 %define SYS_READ 0
 %define STDIN 0
 %define SYS_WRITE 1
 %define STDOUT 1
 %define SYS_EXIT 60
 %define SYS_FCNTL 72
+%define SYS_BRK 12
 
-;;;;;;; Reserved space ;;;;;;;
+;;;;;;; Return stack setup ;;;;;;;
 
 	section .bss
 
-charbuf: resb 1
-stack: resq 1024
+ret_stack: resq 1024
 
+	section .text
+
+init_ret_stack:
+	mov	rbp, ret_stack
+	ret
 
 ;;;;;;; Forth primitives ;;;;;;;
 
@@ -114,10 +131,26 @@ ASMWORD INVERT, "INVERT"
 	not	qword [rsp]
 	NEXT
 
+ASMWORD FETCH, "!"
+	pop	rax
+	push	qword [rax]
+	NEXT
+
+ASMWORD STORE, "@"
+	pop	rax
+	pop	qword [rax]
+	NEXT
+
 ASMWORD	BYE, "BYE"
 	mov	rax, SYS_EXIT
 	xor	rdi, rdi
 	syscall
+
+	section .bss
+
+charbuf: resb 1
+
+	section .text
 
 ASMWORD	EMIT, "EMIT"
 	pop	rax
@@ -136,7 +169,7 @@ ASMWORD	EMIT, "EMIT"
 	section .data
 
 inputbuf: times BUFSIZE db 0
-nextkey: dq inputbuf
+nextkey: dq	inputbuf
 wordbuf: times 64 db 0
 
 	section .text
@@ -199,17 +232,31 @@ _WORD:
 	sub	rdi, wordbuf
 	ret
 
+;;;;;;; Data segment setup ;;;;;;;
+
+VARIABLE HERE,"HERE"
+
+%define DATA_SEG_SIZE 4096
+init_data_seg:
+	xor	rdi, rdi
+	mov	rax, SYS_BRK
+	syscall
+	mov	qword [HERE_VAR], rax
+	lea	rdi, [rax+DATA_SEG_SIZE]
+	mov	rax, SYS_BRK
+	syscall
+	ret
+
+;;;;;;; Other variables/constants ;;;;;;;
+
+CONSTANT R0,"R0",ret_stack
+CONSTANT DOCOL_CONST,"DOCOL",DOCOL
+
 ;;;;;;; Testing code ;;;;;;;
 
 	section .text
 
-plusone:
-	dq	DOCOL, LIT, 1, ADD, EXIT
-
-double:
-	dq	DOCOL, DUP, ADD, EXIT
-
-testword:
+FORTHWD testword, ""
 	dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, \
 		$WORD, temp_put_str, LIT, `\n`, EMIT, BYE
 
@@ -223,10 +270,11 @@ ASMWORD	temp_put_str, ""
 
 	global _start
 _start:
-	INIT_STACKS
+	call	init_data_seg
+	call	init_ret_stack
 	mov	rbx, entry_point
 	NEXT
 
-	section .data
+	section .rodata
 entry_point:
 	dq	testword
