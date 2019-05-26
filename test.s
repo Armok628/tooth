@@ -101,12 +101,14 @@ ASMWORD	LIT, "LIT"
 	add	rbx, 8
 	NEXT
 
+;;;;;;; Stack manipulation ;;;;;;;
+
 ASMWORD	DUP, "DUP"
 	push	qword [rsp]
 	NEXT
 
 ASMWORD	DROP, "DROP"
-	pop	rax
+	sub	rsp, 8
 	NEXT
 
 ASMWORD SWAP, "SWAP"
@@ -125,29 +127,65 @@ ASMWORD ROT, "ROT"
 	push	rdx
 	NEXT
 
+ASMWORD	BYE, "BYE"
+	mov	rax, SYS_EXIT
+	xor	rdi, rdi
+	syscall
+
+;;;;;;; Math operations ;;;;;;;
+
 ASMWORD	ADD, "+"
 	pop	rax
 	add	[rsp], rax
+	NEXT
+
+ASMWORD	SUB, "-"
+	pop	rax
+	sub	[rsp], rax
+	NEXT
+
+ASMWORD MUL, "*"
+	pop	rax
+	imul	qword [rsp]
+	mov	qword [rsp], rax
+	NEXT
+
+ASMWORD DIVMOD, "/MOD"
+	mov	rax, [rsp-8]
+	div	qword [rsp]
+	mov	qword [rsp-8], rax
+	mov	qword [rsp], rdx
 	NEXT
 
 ASMWORD INVERT, "INVERT"
 	not	qword [rsp]
 	NEXT
 
+;;;;;;; Store/Fetch ;;;;;;;
+
 ASMWORD FETCH, "!"
-	pop	rax
-	push	qword [rax]
+	pop	rsi
+	push	qword [rsi]
+	NEXT
+
+ASMWORD BYTEFETCH, "C!"
+	pop	rsi
+	movzx	eax, byte [rsi]
+	push	rax
 	NEXT
 
 ASMWORD STORE, "@"
-	pop	rax
-	pop	qword [rax]
+	pop	rdi
+	pop	qword [rdi]
 	NEXT
 
-ASMWORD	BYE, "BYE"
-	mov	rax, SYS_EXIT
-	xor	rdi, rdi
-	syscall
+ASMWORD BYTESTORE, "C@"
+	pop	rdi
+	pop	rax
+	mov	byte [rdi], al
+	NEXT
+
+;;;;;;; Output ;;;;;;;
 
 	section .bss
 
@@ -164,6 +202,7 @@ ASMWORD	EMIT, "EMIT"
 	mov	rdx, 1
 	syscall
 	NEXT
+
 
 ;;;;;;; Parsing ;;;;;;;
 
@@ -237,7 +276,7 @@ _WORD:
 
 ;;;;;;; Data segment setup ;;;;;;;
 
-VARIABLE HERE,"HERE"
+VARIABLE HERE, "HERE"
 
 %define DATA_SEG_SIZE 4096
 init_data_seg:
