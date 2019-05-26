@@ -90,7 +90,7 @@ ASMWORD SWAP, "SWAP"
 	pop	rsi
 	push	rdi
 	push	rsi
-NEXT
+	NEXT
 
 ASMWORD ROT, "ROT"
 	pop	rdi
@@ -99,7 +99,7 @@ ASMWORD ROT, "ROT"
 	push	rsi
 	push	rdi
 	push	rdx
-NEXT
+	NEXT
 
 ASMWORD	ADD, "+"
 	pop	rax
