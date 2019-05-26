@@ -21,20 +21,20 @@
 	mov	%1, [rbp]
 %endmacro
 
-%define LASTWORD 0
+%define LASTLINK 0
 
-%macro DICTENTRY 2-3 0
+%macro DICTLINK 2-3 0
 	section	.rodata
 %1_DICT:
-	dq	$%[LASTWORD]
-	%define LASTWORD %1_DICT
+	dq	$%[LASTLINK]
+	%define LASTLINK %1_DICT
 	%strlen l %2
 	db	%3+%[l],%2,0
 	%undef l
 %endmacro
 
 %macro ASMWORD	2-3 0
-	DICTENTRY %1, %2, %3
+	DICTLINK %1, %2, %3
 $%1:
 	dq	%1_CODE
 	section	.text
