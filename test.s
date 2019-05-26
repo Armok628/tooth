@@ -23,15 +23,15 @@
 
 %define LASTWORD 0
 
-%macro ASMWORD 2-3 0
+%macro ASMWORD	2-3 0
 	section	.rodata
 %1_DICT:
-	dq	%[LASTWORD]
+	dq	$%[LASTWORD]
 	%define LASTWORD %1
 	%strlen l %2
 	db	%3+%[l],%2,0
 	%undef l
-%1:
+$%1:
 	dq	%1_CODE
 	section	.text
 %1_CODE:
@@ -44,17 +44,18 @@
 %define SYS_WRITE 1
 %define STDOUT 1
 %define SYS_EXIT 60
+%define SYS_FCNTL 72
 
-;;;;;;; Stack space ;;;;;;;
+;;;;;;; Reserved space ;;;;;;;
 
 	section .bss
 
-stack:
-	resq	1024
-stack_end:
+cbuf:	resb	1
+stack:	resq	1024
 
 
-;;;;;;; Forth structure ;;;;;;;
+;;;;;;; Forth primitives ;;;;;;;
+
 	section .text
 
 ; RSP = Stack (manip. with push/pop)
@@ -67,69 +68,56 @@ DOCOL:
 	lea	rbx, [rax+8]
 	NEXT
 
-ASMWORD EXIT,"EXIT"
+ASMWORD	EXIT, "EXIT"
 	RPOP	rbx
 	NEXT
 
-ASMWORD LIT,"LIT"
+ASMWORD	LIT, "LIT"
 	push	qword [rbx]
 	lea	rbx, [rbx+8]
 	NEXT
 
-ASMWORD DUP,"DUP"
+ASMWORD	DUP, "DUP"
 	push	qword [rsp]
 	NEXT
 
-ASMWORD DROP,"DROP"
+ASMWORD	DROP, "DROP"
 	pop	rax
 	NEXT
 
-ASMWORD ADD,"+"
+ASMWORD SWAP, "SWAP"
+	pop	rdi
+	pop	rsi
+	push	rdi
+	push	rsi
+NEXT
+
+ASMWORD ROT, "ROT"
+	pop	rdi
+	pop	rsi
+	pop	rdx
+	push	rsi
+	push	rdi
+	push	rdx
+NEXT
+
+ASMWORD	ADD, "+"
 	pop	rax
 	add	[rsp], rax
 	NEXT
 
-ASMWORD BYE,"BYE"
+ASMWORD INVERT, "INVERT"
+	not	qword [rsp]
+	NEXT
+
+ASMWORD	BYE, "BYE"
 	mov	rax, SYS_EXIT
 	xor	rdi, rdi
 	syscall
 
-;;;;;;; I/O ;;;;;;;
-%define WBUFSIZE 64
-
-	section .data
-
-wbuf: times WBUFSIZE db 0
-wbuftop: dq wbuf
-ebuf: db 0
-
-	section .text
-
-ASMWORD KEY,"KEY"
-	mov	rax, [wbuftop]
-	movzx	eax, byte [rax]
-	test	al, al
-	jz	.key_read
-	inc	qword [wbuftop]
-	push	rax
-	NEXT
-.key_read:
-	mov	rax, SYS_READ
-	mov	rdi, STDIN
-	mov	rsi, wbuf
-	mov	rdx, WBUFSIZE-1
-	syscall
-	test	al, al
-	jz	BYE_CODE
-	mov	byte [rax+wbuf], 0
-	mov	qword [wbuftop], wbuf+1
-	movzx	eax, byte [wbuf]
-	push	rax
-	NEXT
-
-ASMWORD EMIT,"EMIT"
+ASMWORD	EMIT, "EMIT"
 	pop	rax
-	mov	rsi, ebuf
+	mov	rsi, cbuf
 	mov	byte [rsi], al
 	mov	rax, SYS_WRITE
 	mov	rdi, STDOUT
@@ -137,7 +125,71 @@ ASMWORD EMIT,"EMIT"
 	syscall
 	NEXT
 
+;;;;;;; Parsing ;;;;;;;
+
+%define BUFSIZE 256
+
+	section .data
+
+buf: times BUFSIZE db 0
+nextkey: dq buf
+wbuf: times 64 db 0
+
+	section .text
+
+ASMWORD	KEY, "KEY"
+	call	_KEY
+	push	rax
+	NEXT
+_KEY:
+	mov	rax, [nextkey]
+	movzx	eax, byte [rax]
+	test	al, al
+	jz	.read
+	inc	qword [nextkey]
+	ret
+.read:
+	push	rdi ; preserve for stosb
+	mov	rax, SYS_READ
+	mov	rdi, STDIN
+	mov	rsi, buf
+	mov	rdx, BUFSIZE-1
+	syscall
+	pop	rdi
+	test	al, al
+	jz	BYE_CODE
+	mov	byte [buf+rax], 0
+	mov	qword [nextkey], buf+1
+	movzx	eax, byte [buf]
+	ret
+
+ASMWORD WORD, "WORD"
+	mov	rdi, wbuf
+.start:
+	call	_KEY
+	cmp	al, byte ' '
+	jle	.start
+	cmp	al, byte '\'
+	je	.skip
+.key:
+	stosb; mov byte [rdi], al ; inc rdi
+	call	_KEY
+	cmp	al, byte ' '
+	jle	.end
+	jmp	.key
+.skip:
+	call	_KEY
+	cmp	al, byte `\n`
+	jne	.skip
+	jmp	.start
+.end:
+	push	wbuf
+	sub	rdi, wbuf
+	push	rdi
+	NEXT
+
 ;;;;;;; Testing code ;;;;;;;
+
 	section .text
 
 plusone:
@@ -147,14 +199,15 @@ double:
 	dq	DOCOL, DUP, ADD, EXIT
 
 testword:
-	;dq	DOCOL, LIT, 2, double, double, plusone, temp_exit
-	;dq	DOCOL, LIT, 0x4D, EMIT, LIT, 10, EMIT, LIT, 13, temp_exit
-	dq	DOCOL, KEY, KEY, KEY, EMIT, ADD, temp_exit
+	dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, $WORD, temp_put_str, LIT, `\n`, EMIT, BYE
 
-ASMWORD temp_exit,""
-	mov	rax, SYS_EXIT
-	pop	rdi
+ASMWORD	temp_put_str, ""
+	mov	rax, SYS_WRITE
+	mov	rdi, STDOUT
+	pop	rdx
+	pop	rsi
 	syscall
+	NEXT
 
 	global _start
 _start:
