@@ -25,9 +25,9 @@
 
 %macro DICTLINK 2-3 0
 	section	.rodata
-%1_DICT:
+%1_LINK:
 	dq	$%[LASTLINK]
-	%define LASTLINK %1_DICT
+	%define LASTLINK %1_LINK
 	%strlen l %2
 	db	%3+%[l],%2,0
 	%undef l
@@ -36,9 +36,9 @@
 %macro ASMWORD	2-3 0
 	DICTLINK %1, %2, %3
 $%1:
-	dq	%1_CODE
+	dq	%1_ASM
 	section	.text
-%1_CODE:
+%1_ASM:
 %endmacro
 
 %define IMM_F 0x80 ; 1<<7
@@ -161,11 +161,15 @@ _KEY:
 	syscall
 	pop	rdi
 	test	al, al
-	jz	BYE_CODE
+	jz	.exit
 	mov	byte [inputbuf+rax], 0
 	mov	qword [nextkey], inputbuf+1
 	movzx	eax, byte [inputbuf]
 	ret
+.exit:
+	mov	eax, SYS_EXIT
+	xor	rdi, rdi
+	syscall
 
 ASMWORD WORD, "WORD"
 	call	_WORD
@@ -206,7 +210,8 @@ double:
 	dq	DOCOL, DUP, ADD, EXIT
 
 testword:
-	dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, $WORD, temp_put_str, LIT, `\n`, EMIT, BYE
+	dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, \
+		$WORD, temp_put_str, LIT, `\n`, EMIT, BYE
 
 ASMWORD	temp_put_str, ""
 	mov	rax, SYS_WRITE
