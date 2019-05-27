@@ -85,8 +85,8 @@ init_ret_stack:
 
 ; RSP = Stack (manip. with push/pop)
 ; RBP = Return stack (manip. with RPUSH/RPOP)
-; RBX = Next code word (callee-saved register)
-; RAX = This code word (volatile register)
+; RBX = Next execution token (callee-saved register)
+; RAX = This execution token (volatile register)
 
 DOCOL: ; Not a "real" FORTH word, per se
 	RPUSH	rbx
@@ -357,7 +357,7 @@ FORTHVAR HERE, "HERE"
 FORTHCONST R0,"R0",ret_stack
 FORTHCONST DOCOL_CONST,"DOCOL",DOCOL
 
-;;;;;;; Compiler ;;;;;;;
+;;;;;;; Execution Token Finder ;;;;;;;
 
 ASMWORD FIND, "FIND"
 	pop	rdx ; length
@@ -383,8 +383,8 @@ _FIND: ; rdx=len, rsi=str
 	repe	cmpsb 				; compare strings
 	pop	rsi
 	jne	.next 				; if not equal, move on
-	lea	rax, [rax+rdx+10]		;;;;;;; TEMPORARY: return code word
-	ret					; else return
+	lea	rax, [rax+8+1+rdx+1]		; else load xt into rax
+	ret					; return the xt
 .undef:						; if not found:
 	xor	rax, rax			; return 0
 	ret
@@ -405,12 +405,8 @@ init_data_seg:
 
 ;;;;;;; Testing code ;;;;;;;
 
-FORTHWORD testword, ""
-	dq	DOCOL, $WORD, FIND, LIT, DUP_LINK, EQ, \
-		ZBRANCH, 48, \
-			LIT, 'Y', EMIT, BRANCH, 32, \
-			LIT, 'N', EMIT, \
-		LIT, `\n`, EMIT, BYE
+FORTHWORD testinterp, ""
+	dq	DOCOL, $WORD, FIND, EXECUTE, BRANCH, -32
 
 ASMWORD	temp_put_str, ""
 	mov	rax, SYS_WRITE
@@ -431,4 +427,4 @@ _start:
 	section .rodata
 
 entry_point:
-	dq	testword
+	dq	testinterp
