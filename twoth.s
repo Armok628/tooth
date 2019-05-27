@@ -207,7 +207,6 @@ ASMWORD	EMIT, "EMIT"
 	syscall
 	NEXT
 
-
 ;;;;;;; Parsing ;;;;;;;
 
 %define BUFSIZE 256
