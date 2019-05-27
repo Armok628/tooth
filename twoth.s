@@ -376,7 +376,7 @@ ASMWORD FIND, "FIND"
 	push	rax
 	NEXT
 _FIND: ; rdx=len, rsi=str
-	mov	rax, LATEST_VAR
+	mov	rax, last_link
 .next:
 	mov	rax, [rax] 			; go to next word
 	test	rax, rax
@@ -403,13 +403,14 @@ _FIND: ; rdx=len, rsi=str
 
 	section .data
 S0:	dq 0 ; To be initialized later
+last_link: dq LATEST_LINK
 
 FORTHVAR HERE, "HERE" ; To be initialized later
 FORTHCONST BUF_INDEX, ">IN", nextkey
 FORTHCONST R0, "R0", ret_stack
-FORTHCONST DOCOL_CONST,"DOCOL",DOCOL
+FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
 
-FORTHVAR LATEST,"LATEST",LASTLINK
+FORTHCONST LATEST, "LATEST", last_link
 
 ;;;;;;; Data segment setup ;;;;;;;
 
