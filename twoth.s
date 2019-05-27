@@ -361,12 +361,10 @@ _FIND: ; rdx=len, rsi=str
 	repe	cmpsb 				; compare strings
 	pop	rsi
 	jne	.next 				; if not equal, move on
-.found:						; if found:
-	lea	rax, [rax+rdx+10] 		; return code word
-	ret
+	ret					; else return
 .undef:						; if not found:
 	xor	rax, rax			; return 0
-	NEXT
+	ret
 
 ;;;;;;; Data segment setup ;;;;;;;
 
@@ -386,7 +384,7 @@ init_data_seg:
 
 FORTHWD testword, ""
 	;dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, $WORD, temp_put_str, LIT, `\n`, EMIT, BYE
-	dq	DOCOL, $WORD, FIND, LIT, DUP, EQ, \
+	dq	DOCOL, $WORD, FIND, LIT, DUP_LINK, EQ, \
 		ZBRANCH, 48, \
 			LIT, 'Y', EMIT, BRANCH, 32, \
 			LIT, 'N', EMIT, \
