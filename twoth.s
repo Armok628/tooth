@@ -205,7 +205,7 @@ SET_TOS_FALSE:
 %macro CMPWORD 3
 ASMWORD %1, %2
 	pop	rax
-	cmp	rax, qword [rsp]
+	cmp	qword [rsp], rax
 	%3	SET_TOS_TRUE
 	jmp	SET_TOS_FALSE
 %endmacro
