@@ -36,21 +36,21 @@ $%1:
 %1_ASM:
 %endmacro
 
-%macro FORTHWD 2-3+ 0
+%macro FORTHWORD 2-3+ 0
 	DICTLINK %1, %2, %3
 $%1:
 %endmacro
 
-%macro CONSTANT 3
+%macro FORTHCONST 3
 ASMWORD %1, %2
 	push	%3
 	NEXT
 %endmacro
 
-%macro VARIABLE 2-3 0
+%macro FORTHVAR 2-3 0
 	section .data
 %1_VAR: dq	%3
-	CONSTANT %1, %2, %1_VAR
+	FORTHCONST %1, %2, %1_VAR
 %endmacro
 
 ;;;;;;; Assembler constants ;;;;;;;
@@ -330,10 +330,10 @@ _WORD:
 
 ;;;;;;; Variables/Constants ;;;;;;;
 
-VARIABLE LATEST,"LATEST",LASTLINK
-VARIABLE HERE, "HERE"
-CONSTANT R0,"R0",ret_stack
-CONSTANT DOCOL_CONST,"DOCOL",DOCOL
+FORTHVAR LATEST,"LATEST",LASTLINK
+FORTHVAR HERE, "HERE"
+FORTHCONST R0,"R0",ret_stack
+FORTHCONST DOCOL_CONST,"DOCOL",DOCOL
 
 ;;;;;;; Compiler ;;;;;;;
 
@@ -382,7 +382,7 @@ init_data_seg:
 
 ;;;;;;; Testing code ;;;;;;;
 
-FORTHWD testword, ""
+FORTHWORD testword, ""
 	;dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, $WORD, temp_put_str, LIT, `\n`, EMIT, BYE
 	dq	DOCOL, $WORD, FIND, LIT, DUP_LINK, EQ, \
 		ZBRANCH, 48, \
