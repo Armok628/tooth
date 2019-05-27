@@ -1,0 +1,201 @@
+(incomplete)
+
+The following section is taken (almost) directly from
+https://forth-standard.org/standard/core
+with annotations based on their implementation status in the project.
+
+I may discover more words that I deem necessary.
+They'll be placed in the list somwhere without a section number.
+
+	Core words
+
+!				implemented in assembly
+#			(???)	unplanned as of yet
+#>			(???)	unplanned as of yet
+#S			(???)	unplanned as of yet
+'				implemented in assembly
+(				implemented by proxy, see _WORD (could be Forth)
+*				implemented in assembly
+*/				planned in Forth
+*/MOD				planned in Forth
++				implemented in assembly
++!				planned in Forth
++LOOP				planned in Forth
+,			(???)	implemented in assembly (could be Forth? HERE @ 8 ALLOT)
+-				implemented in assembly
+.			(???)	planned in Forth
+."			(???)	planned in Forth
+/				planned in Forth
+/MOD				implemented in assembly
+0<				planned in Forth
+0=				planned in Forth
+1+				planned in Forth
+1-				planned in Forth
+2!			(???)	arguable necessitude
+2*			(???)	arguable necessitude
+2/			(???)	arguable necessitude
+2@			(???)	arguable necessitude
+2DROP			(???)	arguable necessitude
+2DUP			(???)	arguable necessitude
+2OVER			(???)	arguable necessitude
+2SWAP			(???)	arguable necessitude
+:				planned in Forth (hand-compiled)
+;				planned in Forth (hand-compiled)
+<				implemented in assembly
+<#			(???)	unplanned as of yet
+=				implemented in assembly
+>				implemented in assembly
+>BODY			(???)	planned in Forth
+>IN				implemented in assembly (constant)
+>NUMBER			(???)	planned in Forth
+>R				implemented in assembly
+?DUP				planned in Forth
+@				implemented in assembly
+ABORT			(???)	planned in assembly
+ABORT"				planned in Forth
+ABS			(???)	planned in Forth
+ACCEPT			(???)	planned in Forth
+ALIGN			(???)	planned in assembly
+ALIGNED			(???)	planned in assembly
+ALLOT				implemented in assembly
+AND				implemented in assembly
+BASE			(???)	planned in Forth
+BEGIN			(???)	arguable necessitude
+BL			(???)	planned in assembly
+C!				implemented in assembly
+C,				implemented in assembly
+C@				implemented in assembly
+CELL+				implemented in assembly
+CELLS				planned in Forth
+CHAR				planned in Forth (see KEY)
+CHAR+				planned in Forth
+CHARS				planned in Forth
+CONSTANT			planned in Forth
+COUNT				planned in Forth
+CR				planned in Forth
+CREATE				planned in Forth
+DECIMAL				planned in Forth
+DEPTH				planned in assembly
+DO				planned in Forth
+DOES>				
+DROP
+DUP
+ELSE
+EMIT
+ENVIRONMENT?
+EVALUATE
+EXECUTE
+EXIT
+FILL
+FIND
+FM/MOD
+HERE
+HOLD
+I
+IF
+IMMEDIATE
+INVERT
+J
+KEY
+LEAVE
+LITERAL
+LOOP
+LSHIFT
+M*
+MAX
+MIN
+MOD
+MOVE
+NEGATE
+OR
+OVER
+POSTPONE
+QUIT
+R>
+R@
+RECURSE
+REPEAT
+ROT
+RSHIFT
+S"
+S>D
+SIGN
+SM/REM
+SOURCE
+SPACE
+SPACES
+STATE
+SWAP
+THEN
+TYPE
+U.
+U<
+UM*
+UM/MOD
+UNLOOP
+UNTIL
+VARIABLE
+WHILE
+WORD
+XOR
+[
+[']
+[CHAR]
+]
+
+	Core extension words
+
+.(
+.R
+0<>
+0>
+2>R
+2R>
+2R@
+:NONAME
+<>
+?DO
+ACTION-OF
+AGAIN
+BUFFER:
+C"
+CASE
+COMPILE,
+DEFER
+DEFER!
+DEFER@
+ENDCASE
+ENDOF
+ERASE
+FALSE
+HEX
+HOLDS
+IS
+MARKER
+NIP
+OF
+PAD
+PARSE
+PARSE-NAME
+PICK
+REFILL
+RESTORE-INPUT
+ROLL
+S\"
+SAVE-INPUT
+SOURCE-ID
+TO
+TRUE
+TUCK
+U.R
+U>
+UNUSED
+VALUE
+WITHIN
+[COMPILE]
+\
+
+	Additional words
+
+LATEST				implemented in assembly
+INTERPRET			planned in Forth (hand-compiled)

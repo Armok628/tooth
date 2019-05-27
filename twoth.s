@@ -7,13 +7,13 @@
 %endmacro
 
 %macro RPUSH 1
-	mov	[rbp], %1
 	add	rbp, 8
+	mov	qword [rbp], %1
 %endmacro
 
 %macro RPOP 1
+	mov	%1, qword [rbp]
 	sub	rbp, 8
-	mov	%1, [rbp]
 %endmacro
 
 %define LASTLINK 0
@@ -137,6 +137,26 @@ ASMWORD ROT, "ROT" ; ( a b c -- b c a )
 	push	rdx
 	NEXT
 
+ASMWORD OVER, "OVER" ; ( a b -- a b a )
+	push	qword [rsp-8]
+	NEXT
+
+;;;;;;; Return stack manipulation ;;;;;;;
+
+ASMWORD TO_R, ">R"
+	pop	rax
+	RPUSH	rax
+	NEXT
+
+ASMWORD FROM_R, "R>"
+	RPOP	rax
+	push	rax
+	NEXT
+
+ASMWORD R_FETCH, "R@"
+	push	qword [rbp]
+	NEXT
+
 ;;;;;;; Math operations ;;;;;;;
 
 ASMWORD	ADD, "+" ; ( a b -- a+b)
@@ -160,6 +180,16 @@ ASMWORD DIVMOD, "/MOD" ; ( a b -- a%b a/b )
 	div	qword [rsp]
 	mov	qword [rsp-8], rdx
 	mov	qword [rsp], rax
+	NEXT
+
+ASMWORD AND, "AND" ; ( a b -- a&b )
+	pop	rax
+	and	qword [rsp], rax
+	NEXT
+
+ASMWORD OR, "OR" ; ( a b -- a|b )
+	pop	rax
+	or	qword [rsp], rax
 	NEXT
 
 ASMWORD XOR, "XOR" ; ( a b -- a^b )
@@ -212,8 +242,6 @@ ASMWORD %1, %2
 
 CMPWORD EQ, "=", je
 CMPWORD NEQ, "<>", jne
-CMPWORD LEQ, "<=", jle
-CMPWORD GEQ, ">=", jge
 CMPWORD GT, "<", jl
 CMPWORD LT, ">", jg
 
@@ -369,7 +397,7 @@ _WORD:
 
 ;;;;;;; Execution Token Finder ;;;;;;;
 
-ASMWORD FIND, "FIND"
+ASMWORD FIND, "'"
 	pop	rdx ; length
 	pop	rsi ; string
 	call	_FIND
