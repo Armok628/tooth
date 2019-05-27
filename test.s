@@ -101,6 +101,11 @@ ASMWORD	LIT, "LIT"
 	add	rbx, 8
 	NEXT
 
+ASMWORD	BYE, "BYE"
+	mov	rax, SYS_EXIT
+	xor	rdi, rdi
+	syscall
+
 ;;;;;;; Stack manipulation ;;;;;;;
 
 ASMWORD	DUP, "DUP"
@@ -127,11 +132,6 @@ ASMWORD ROT, "ROT"
 	push	rdx
 	NEXT
 
-ASMWORD	BYE, "BYE"
-	mov	rax, SYS_EXIT
-	xor	rdi, rdi
-	syscall
-
 ;;;;;;; Math operations ;;;;;;;
 
 ASMWORD	ADD, "+"
@@ -155,6 +155,10 @@ ASMWORD DIVMOD, "/MOD"
 	div	qword [rsp]
 	mov	qword [rsp-8], rax
 	mov	qword [rsp], rdx
+	NEXT
+
+ASMWORD NEGATE, "NEGATE"
+	neg	qword [rsp]
 	NEXT
 
 ASMWORD INVERT, "INVERT"
@@ -242,7 +246,7 @@ _KEY:
 	movzx	eax, byte [inputbuf]
 	ret
 .exit:
-	mov	eax, SYS_EXIT
+	mov	rax, SYS_EXIT
 	xor	rdi, rdi
 	syscall
 
