@@ -17,6 +17,6 @@ begin with the compiler (which would need to be itself compiled manually).
 Then use the new compiler to build up the rest of the language's words.
 
 Some more words may need to be defined in assembly during this process,
-if not out of necessity, then out of convenience.
-e.g.:	It may be easier to invoke a function with `rep movsb`
+if not out of necessity, then out of convenience or efficiency.
+e.g.:	It is much faster (and easier?) to use a function with `rep movsb`
 	than to write a string copy word in pure Forth.
