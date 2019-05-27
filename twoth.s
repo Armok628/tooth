@@ -43,7 +43,7 @@ $%1:
 
 %macro FORTHCONST 3
 ASMWORD %1, %2, F_IMM
-	push	%3
+	push	qword %3
 	NEXT
 %endmacro
 
@@ -167,6 +167,16 @@ ASMWORD XOR, "XOR" ; ( a b -- a^b )
 	xor	qword [rsp], rax
 	NEXT
 
+ASMWORD LSHIFT, "LSHIFT"
+	pop	rcx
+	shl	qword [rsp], cl
+	NEXT
+
+ASMWORD RSHIFT, "RSHIFT"
+	pop	rcx
+	shr	qword [rsp], cl
+	NEXT
+
 ASMWORD INCR, "1+"
 	inc	qword [rsp]
 	NEXT
@@ -287,7 +297,8 @@ BUFSIZE equ 256
 	section .data
 
 inputbuf: times BUFSIZE db 0
-nextkey: dq	inputbuf
+keycount: dq 0
+nextkey: dq 0
 wordbuf: times 64 db 0
 
 	section .text
@@ -297,24 +308,25 @@ ASMWORD	KEY, "KEY"
 	push	rax
 	NEXT
 _KEY:
-	mov	rax, [nextkey]
-	movzx	eax, byte [rax] 		; get key from buffer
-	test	al, al
-	jz	.read 				; if key is null, get more data
-	inc	qword [nextkey] 		; else move to nextkey
+	mov	rdx, [nextkey]			; get nextkey
+	mov	rcx, [keycount]			; get keycount
+	cmp	rdx, rcx			; compare
+	jnl	.read 				; if nextkey!<keycount, read
+	movzx	eax, byte [inputbuf+rdx]	; else load next key
+	inc	qword [nextkey]	 		; increment nextkey
 	ret 					; return with key in al
 .read:
 	push	rdi 				; preserve rdi (for stosb in WORD)
 	mov	rax, SYS_READ 			; need to read more data
 	mov	rdi, STDIN 			; from stdin
 	mov	rsi, inputbuf 			; into inputbuf
-	mov	rdx, BUFSIZE-1 			; for at most N bytes
+	mov	rdx, BUFSIZE-1 			; for at most BUFSIZE-1 bytes
 	syscall 				; get the data
 	pop	rdi 				; restore rdi
-	test	al, al
-	jz	.exit 				; if no bytes read, quit
-	mov	byte [inputbuf+rax], 0 		; null-terminate
-	mov	qword [nextkey], inputbuf+1 	; update nextkey
+	test	al, al				; check number of bytes read
+	jz	.exit 				; if no bytes were read, quit
+	mov	qword [keycount], rax		; update keycount
+	mov	qword [nextkey], 1		; update nextkey
 	movzx	eax, byte [inputbuf] 		; get key from buffer
 	ret 					; return with key in al
 .exit:
@@ -322,9 +334,14 @@ _KEY:
 	xor	rdi, rdi
 	syscall
 
+ASMWORD SOURCE, "SOURCE"
+	push	qword inputbuf
+	push	qword [keycount]
+	NEXT
+
 ASMWORD WORD, "WORD"
 	call	_WORD
-	push	wordbuf
+	push	qword wordbuf
 	push	rdi 				; word length
 	NEXT
 _WORD:
@@ -333,8 +350,8 @@ _WORD:
 	call	_KEY 				; get a key in al
 	cmp	al, byte ' '
 	jle	.start 				; if key is whitespace, try again
-	cmp	al, byte '\'
-	je	.skip 				; if key is '\', skip comment
+	cmp	al, byte '('
+	je	.skip 				; if key is '(', skip comment
 .key:
 	stosb 					; store key
 	call	_KEY 				; get a key in al
@@ -343,19 +360,12 @@ _WORD:
 	jmp	.key 				; continue
 .skip:
 	call	_KEY 				; get a key in al
-	cmp	al, byte `\n`
+	cmp	al, byte `)`
 	jne	.skip 				; if key is not newline, continue
 	jmp	.start 				; try again for word
 .end:
 	sub	rdi, wordbuf			; put length in rdi
 	ret
-
-;;;;;;; Variables/Constants ;;;;;;;
-
-FORTHVAR LATEST,"LATEST",LASTLINK
-FORTHVAR HERE, "HERE"
-FORTHCONST R0,"R0",ret_stack
-FORTHCONST DOCOL_CONST,"DOCOL",DOCOL
 
 ;;;;;;; Execution Token Finder ;;;;;;;
 
@@ -389,6 +399,18 @@ _FIND: ; rdx=len, rsi=str
 	xor	rax, rax			; return 0
 	ret
 
+;;;;;;; Variables/Constants ;;;;;;;
+
+	section .data
+S0:	dq 0 ; To be initialized later
+
+FORTHVAR HERE, "HERE" ; To be initialized later
+FORTHCONST BUF_INDEX, ">IN", nextkey
+FORTHCONST R0, "R0", ret_stack
+FORTHCONST DOCOL_CONST,"DOCOL",DOCOL
+
+FORTHVAR LATEST,"LATEST",LASTLINK
+
 ;;;;;;; Data segment setup ;;;;;;;
 
 DATA_SEG_SIZE equ 4096
@@ -405,10 +427,11 @@ init_data_seg:
 
 ;;;;;;; Testing code ;;;;;;;
 
-FORTHWORD testinterp, ""
+FORTHWORD baseinterp, ""
 	dq	DOCOL, $WORD, FIND, EXECUTE, BRANCH, -32
 
 ASMWORD	temp_put_str, ""
+	mov	qword [S0], rsp
 	mov	rax, SYS_WRITE
 	mov	rdi, STDOUT
 	pop	rdx
@@ -427,4 +450,4 @@ _start:
 	section .rodata
 
 entry_point:
-	dq	testinterp
+	dq	baseinterp
