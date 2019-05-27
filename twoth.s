@@ -57,6 +57,8 @@ ASMWORD %1, %2
 
 F_IMM equ 0x80
 F_HID equ 0x40
+LENMASK equ ~(F_IMM|F_HID)
+
 STDIN equ 0
 STDOUT equ 1
 STDERR equ 2
@@ -78,7 +80,7 @@ init_ret_stack:
 	mov	rbp, ret_stack
 	ret
 
-;;;;;;; Forth primitives ;;;;;;;
+;;;;;;; Basic FORTH primitives ;;;;;;;
 
 	section .text
 
@@ -87,7 +89,7 @@ init_ret_stack:
 ; RBX = Next code word (callee-saved register)
 ; RAX = This code word (volatile register)
 
-DOCOL:
+DOCOL: ; Not a "real" FORTH word, per se
 	RPUSH	rbx
 	lea	rbx, [rax+8]
 	NEXT
@@ -106,24 +108,28 @@ ASMWORD	BYE, "BYE"
 	xor	rdi, rdi
 	syscall
 
+ASMWORD EXECUTE, "EXECUTE"
+	pop	rax
+	jmp	[rax]
+
 ;;;;;;; Stack manipulation ;;;;;;;
 
-ASMWORD	DUP, "DUP"
+ASMWORD	DUP, "DUP" ; ( a -- a a )
 	push	qword [rsp]
 	NEXT
 
-ASMWORD	DROP, "DROP"
+ASMWORD	DROP, "DROP" ; ( a -- )
 	sub	rsp, 8
 	NEXT
 
-ASMWORD SWAP, "SWAP"
+ASMWORD SWAP, "SWAP" ; ( a b -- b a )
 	pop	rdi
 	pop	rsi
 	push	rdi
 	push	rsi
 	NEXT
 
-ASMWORD ROT, "ROT"
+ASMWORD ROT, "ROT" ; ( a b c -- b c a )
 	pop	rdi
 	pop	rsi
 	pop	rdx
@@ -134,59 +140,104 @@ ASMWORD ROT, "ROT"
 
 ;;;;;;; Math operations ;;;;;;;
 
-ASMWORD	ADD, "+"
+ASMWORD	ADD, "+" ; ( a b -- a+b)
 	pop	rax
 	add	[rsp], rax
 	NEXT
 
-ASMWORD	SUB, "-"
+ASMWORD	SUB, "-" ; ( a b -- a-b )
 	pop	rax
 	sub	[rsp], rax
 	NEXT
 
-ASMWORD MUL, "*"
+ASMWORD MUL, "*" ; ( a b -- a*b )
 	pop	rax
 	imul	qword [rsp]
 	mov	qword [rsp], rax
 	NEXT
 
-ASMWORD DIVMOD, "/MOD"
+ASMWORD DIVMOD, "/MOD" ; ( a b -- a%b a/b )
 	mov	rax, [rsp-8]
 	div	qword [rsp]
-	mov	qword [rsp-8], rax
-	mov	qword [rsp], rdx
+	mov	qword [rsp-8], rdx
+	mov	qword [rsp], rax
 	NEXT
 
-ASMWORD NEGATE, "NEGATE"
+ASMWORD INCR, "1+"
+	inc	qword [rsp]
+	NEXT
+
+ASMWORD DECR, "1-"
+	dec	qword [rsp]
+	NEXT
+
+ASMWORD NEGATE, "NEGATE" ; ( x -- -x )
 	neg	qword [rsp]
 	NEXT
 
-ASMWORD INVERT, "INVERT"
+ASMWORD INVERT, "INVERT" ; ( x -- ~x )
 	not	qword [rsp]
 	NEXT
 
+;;;;;;; Comparisons ;;;;;;;
+
+SET_TOS_TRUE:
+	mov	qword [rsp], ~0
+	NEXT
+SET_TOS_FALSE:
+	mov	qword [rsp], 0
+	NEXT
+
+%macro CMPWORD 3
+ASMWORD %1, %2
+	pop	rax
+	cmp	rax, qword [rsp]
+	%3	SET_TOS_TRUE
+	jmp	SET_TOS_FALSE
+%endmacro
+
+CMPWORD EQ, "=", je
+CMPWORD NEQ, "<>", jne
+CMPWORD LEQ, "<=", jle
+CMPWORD GEQ, ">=", jge
+CMPWORD GT, "<", jl
+CMPWORD LT, ">", jg
+
 ;;;;;;; Store/Fetch ;;;;;;;
 
-ASMWORD FETCH, "!"
+ASMWORD FETCH, "!" ; ( addr -- qword )
 	pop	rsi
 	push	qword [rsi]
 	NEXT
 
-ASMWORD BYTEFETCH, "C!"
+ASMWORD BYTEFETCH, "C!" ; ( addr -- byte )
 	pop	rsi
 	movzx	eax, byte [rsi]
 	push	rax
 	NEXT
 
-ASMWORD STORE, "@"
+ASMWORD STORE, "@" ; ( qword addr -- )
 	pop	rdi
 	pop	qword [rdi]
 	NEXT
 
-ASMWORD BYTESTORE, "C@"
+ASMWORD BYTESTORE, "C@" ; ( byte addr -- )
 	pop	rdi
 	pop	rax
 	mov	byte [rdi], al
+	NEXT
+
+;;;;;;; Branching ;;;;;;;
+
+ASMWORD BRANCH, "BRANCH"
+	add	rbx, qword [rbx]
+	NEXT
+
+ASMWORD ZBRANCH, "0BRANCH"
+	pop	rax
+	test	rax, rax
+	jz	BRANCH_ASM
+	add	rbx, 8
 	NEXT
 
 ;;;;;;; Output ;;;;;;;
@@ -207,9 +258,9 @@ ASMWORD	EMIT, "EMIT"
 	syscall
 	NEXT
 
-;;;;;;; Parsing ;;;;;;;
+;;;;;;; Parser ;;;;;;;
 
-%define BUFSIZE 256
+BUFSIZE equ 256
 
 	section .data
 
@@ -225,25 +276,25 @@ ASMWORD	KEY, "KEY"
 	NEXT
 _KEY:
 	mov	rax, [nextkey]
-	movzx	eax, byte [rax]
+	movzx	eax, byte [rax] 		; get key from buffer
 	test	al, al
-	jz	.read
-	inc	qword [nextkey]
-	ret
+	jz	.read 				; if key is null, get more data
+	inc	qword [nextkey] 		; else move to nextkey
+	ret 					; return with key in al
 .read:
-	push	rdi ; preserve for stosb
-	mov	rax, SYS_READ
-	mov	rdi, STDIN
-	mov	rsi, inputbuf
-	mov	rdx, BUFSIZE-1
-	syscall
-	pop	rdi
+	push	rdi 				; preserve rdi (for stosb in WORD)
+	mov	rax, SYS_READ 			; need to read more data
+	mov	rdi, STDIN 			; from stdin
+	mov	rsi, inputbuf 			; into inputbuf
+	mov	rdx, BUFSIZE-1 			; for at most N bytes
+	syscall 				; get the data
+	pop	rdi 				; restore rdi
 	test	al, al
-	jz	.exit
-	mov	byte [inputbuf+rax], 0
-	mov	qword [nextkey], inputbuf+1
-	movzx	eax, byte [inputbuf]
-	ret
+	jz	.exit 				; if no bytes read, quit
+	mov	byte [inputbuf+rax], 0 		; null-terminate
+	mov	qword [nextkey], inputbuf+1 	; update nextkey
+	movzx	eax, byte [inputbuf] 		; get key from buffer
+	ret 					; return with key in al
 .exit:
 	mov	rax, SYS_EXIT
 	xor	rdi, rdi
@@ -252,36 +303,75 @@ _KEY:
 ASMWORD WORD, "WORD"
 	call	_WORD
 	push	wordbuf
-	push	rdi ; word length
+	push	rdi 				; word length
 	NEXT
 _WORD:
 	mov	rdi, wordbuf
 .start:
-	call	_KEY
+	call	_KEY 				; get a key in al
 	cmp	al, byte ' '
-	jle	.start
+	jle	.start 				; if key is whitespace, try again
 	cmp	al, byte '\'
-	je	.skip
+	je	.skip 				; if key is '\', skip comment
 .key:
-	stosb; mov byte [rdi], al ; inc rdi
-	call	_KEY
+	stosb 					; store key
+	call	_KEY 				; get a key in al
 	cmp	al, byte ' '
-	jle	.end
-	jmp	.key
+	jle	.end 				; if key is whitespace, finish
+	jmp	.key 				; continue
 .skip:
-	call	_KEY
+	call	_KEY 				; get a key in al
 	cmp	al, byte `\n`
-	jne	.skip
-	jmp	.start
+	jne	.skip 				; if key is not newline, continue
+	jmp	.start 				; try again for word
 .end:
-	sub	rdi, wordbuf
+	sub	rdi, wordbuf 			; put length in rdi
 	ret
+
+;;;;;;; Variables/Constants ;;;;;;;
+
+VARIABLE LATEST,"LATEST",LASTLINK
+VARIABLE HERE, "HERE"
+CONSTANT R0,"R0",ret_stack
+CONSTANT DOCOL_CONST,"DOCOL",DOCOL
+
+;;;;;;; Compiler ;;;;;;;
+
+ASMWORD FIND, "FIND"
+	pop	rdx
+	pop	rsi
+	call	_FIND
+	push	rax
+	NEXT
+_FIND: ; rdx=len, rsi=str
+	mov	rax, LATEST_VAR
+.next:
+	mov	rax, [rax] 			; go to next word
+	test	rax, rax
+	jz	.undef 				; if NULL, none left
+	movzx	ecx, byte [rax+8] 		; get entry string length|flags
+	test	cl, F_HID 			; if word is hidden...
+	jnz	.next 				; move on.
+	and	cl, LENMASK 			; reduce to length only
+	cmp	cl, dl 				; compare lengths
+	jne	.next 				; if not equal, move on
+	mov	rdi, [rax+9] 			; else load entry string
+.cmpstr:
+	push	rsi
+	repe	cmpsb 				; compare strings
+	pop	rsi
+	jne	.next 				; if not equal, move on
+.found:						; if found:
+	lea	rax, [rax+rdx+9] 		; return code word
+	ret
+.undef:						; if not found:
+	xor	rax, rax			; return 0
+	NEXT
 
 ;;;;;;; Data segment setup ;;;;;;;
 
-VARIABLE HERE, "HERE"
+DATA_SEG_SIZE equ 4096
 
-%define DATA_SEG_SIZE 4096
 init_data_seg:
 	xor	rdi, rdi
 	mov	rax, SYS_BRK
@@ -292,18 +382,15 @@ init_data_seg:
 	syscall
 	ret
 
-;;;;;;; Other variables/constants ;;;;;;;
-
-CONSTANT R0,"R0",ret_stack
-CONSTANT DOCOL_CONST,"DOCOL",DOCOL
-
 ;;;;;;; Testing code ;;;;;;;
 
-	section .text
-
 FORTHWD testword, ""
-	dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, \
-		$WORD, temp_put_str, LIT, `\n`, EMIT, BYE
+	;dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, $WORD, temp_put_str, LIT, `\n`, EMIT, BYE
+	dq	DOCOL, $WORD, FIND, LIT, 0, EQ, \
+		ZBRANCH, 48, \
+			LIT, 'N', EMIT, BRANCH, 32, \
+			LIT, 'Y', EMIT, \
+		LIT, `\n`, EMIT, BYE
 
 ASMWORD	temp_put_str, ""
 	mov	rax, SYS_WRITE
@@ -315,11 +402,13 @@ ASMWORD	temp_put_str, ""
 
 	global _start
 _start:
+	cld
 	call	init_data_seg
 	call	init_ret_stack
 	mov	rbx, entry_point
 	NEXT
 
 	section .rodata
+
 entry_point:
 	dq	testword
