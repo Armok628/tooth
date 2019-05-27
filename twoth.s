@@ -162,6 +162,11 @@ ASMWORD DIVMOD, "/MOD" ; ( a b -- a%b a/b )
 	mov	qword [rsp], rax
 	NEXT
 
+ASMWORD XOR, "XOR" ; ( a b -- a^b )
+	pop	rax
+	xor	qword [rsp], rax
+	NEXT
+
 ASMWORD INCR, "1+"
 	inc	qword [rsp]
 	NEXT
@@ -378,33 +383,11 @@ _FIND: ; rdx=len, rsi=str
 	repe	cmpsb 				; compare strings
 	pop	rsi
 	jne	.next 				; if not equal, move on
+	lea	rax, [rax+rdx+10]		;;;;;;; TEMPORARY: return code word
 	ret					; else return
 .undef:						; if not found:
 	xor	rax, rax			; return 0
 	ret
-
-ASMWORD CREATE, "CREATE", F_IMM
-	mov	rdi, [HERE_VAR]			; load rdi with HERE
-	mov	rsi, [LATEST_VAR]		; load rsi with LATEST
-	mov	qword [rdi], rsi		; insert LATEST
-	mov	qword [LATEST_VAR], rdi		; update LATEST to HERE
-	add	qword [HERE_VAR], 8		; increment HERE
-	call	_WORD				; get word from input buffer
-	mov	rcx, rdi			; move word length into rcx
-	mov	rdi, [HERE_VAR]			; load rdi with HERE
-	mov	rsi, wordbuf			; load rsi with word buffer
-	mov	byte [rdi], cl			; insert length
-	inc	rdi
-	rep	movsb				; copy string
-	mov	byte [rdi], 0			; insert null buffer
-	inc	rdi
-	mov	qword [rdi], DOCOL		; insert DOCOL
-	add	rdi, 8
-	mov	qword [rdi], LIT		; insert LIT
-	add	rdi, 16
-	mov	qword [rdi-8], rdi		; insert addr. of next cell
-	mov	qword [HERE_VAR], rdi		; update HERE to next cell
-	NEXT
 
 ;;;;;;; Data segment setup ;;;;;;;
 
