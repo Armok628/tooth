@@ -42,7 +42,7 @@ $%1:
 %endmacro
 
 %macro FORTHCONST 3
-ASMWORD %1, %2
+ASMWORD %1, %2, F_IMM
 	push	%3
 	NEXT
 %endmacro
@@ -57,7 +57,6 @@ ASMWORD %1, %2
 
 F_IMM equ 0x80
 F_HID equ 0x40
-LENMASK equ ~(F_IMM|F_HID)
 
 STDIN equ 0
 STDOUT equ 1
@@ -227,6 +226,24 @@ ASMWORD BYTESTORE, "C@" ; ( byte addr -- )
 	mov	byte [rdi], al
 	NEXT
 
+ASMWORD COMMA, ","
+	mov	rdi, [HERE_VAR]
+	pop	qword [rdi]
+	add	qword [HERE_VAR], 8
+	NEXT
+
+ASMWORD BYTECOMMA, "C,"
+	pop	rax
+	mov	rdi, [HERE_VAR]
+	mov	byte [rdi], al
+	inc	qword [HERE_VAR]
+	NEXT
+
+ASMWORD ALLOT, "ALLOT"
+	pop	rax
+	add	qword [HERE_VAR], rax
+	NEXT
+
 ;;;;;;; Branching ;;;;;;;
 
 ASMWORD BRANCH, "BRANCH"
@@ -352,7 +369,7 @@ _FIND: ; rdx=len, rsi=str
 	movzx	ecx, byte [rax+8] 		; get entry string length|flags
 	test	cl, F_HID 			; if word is hidden...
 	jnz	.next 				; move on.
-	and	cl, LENMASK 			; reduce to length only
+	and	cl, ~F_IMM 			; remove immediate flag
 	cmp	cl, dl 				; compare lengths
 	jne	.next 				; if not equal, move on
 	lea	rdi, [rax+9] 			; else load entry string
@@ -383,7 +400,6 @@ init_data_seg:
 ;;;;;;; Testing code ;;;;;;;
 
 FORTHWORD testword, ""
-	;dq	DOCOL, $WORD, temp_put_str, LIT, ' ', EMIT, $WORD, temp_put_str, LIT, `\n`, EMIT, BYE
 	dq	DOCOL, $WORD, FIND, LIT, DUP_LINK, EQ, \
 		ZBRANCH, 48, \
 			LIT, 'Y', EMIT, BRANCH, 32, \
