@@ -4,8 +4,10 @@ The following section is taken (almost) directly from
 https://forth-standard.org/standard/core
 with annotations based on their implementation status in the project.
 
-I may discover more words that I deem necessary.
-They'll be placed in the list somwhere without a section number.
+I may discover more things that I deem necessary to include.
+They'll be placed in the bottom list.
+
+This list is obviously subject to change.
 
 	Core words
 
@@ -31,14 +33,14 @@ They'll be placed in the list somwhere without a section number.
 0=				planned in Forth
 1+				planned in Forth
 1-				planned in Forth
-2!			(???)	arguable necessitude
-2*			(???)	arguable necessitude
-2/			(???)	arguable necessitude
-2@			(???)	arguable necessitude
-2DROP			(???)	arguable necessitude
-2DUP			(???)	arguable necessitude
-2OVER			(???)	arguable necessitude
-2SWAP			(???)	arguable necessitude
+2!			(???)	debatable necessitude
+2*			(???)	debatable necessitude
+2/			(???)	debatable necessitude
+2@			(???)	debatable necessitude
+2DROP			(???)	debatable necessitude
+2DUP			(???)	debatable necessitude
+2OVER			(???)	debatable necessitude
+2SWAP			(???)	debatable necessitude
 :				planned in Forth (hand-compiled)
 ;				planned in Forth (hand-compiled)
 <				implemented in assembly
@@ -46,7 +48,7 @@ They'll be placed in the list somwhere without a section number.
 =				implemented in assembly
 >				implemented in assembly
 >BODY			(???)	planned in Forth
->IN				implemented in assembly (constant)
+>IN				implemented in assembly (as constant)
 >NUMBER			(???)	planned in Forth
 >R				implemented in assembly
 ?DUP				planned in Forth
@@ -60,7 +62,7 @@ ALIGNED			(???)	planned in assembly
 ALLOT				implemented in assembly
 AND				implemented in assembly
 BASE			(???)	planned in Forth
-BEGIN			(???)	arguable necessitude
+BEGIN			(???)	debatable necessitude
 BL			(???)	planned in assembly
 C!				implemented in assembly
 C,				implemented in assembly
@@ -73,75 +75,75 @@ CHARS				planned in Forth
 CONSTANT			planned in Forth
 COUNT				planned in Forth
 CR				planned in Forth
-CREATE				planned in Forth
+CREATE			(???)	planned in Forth
 DECIMAL				planned in Forth
 DEPTH				planned in assembly
 DO				planned in Forth
-DOES>				
-DROP
-DUP
-ELSE
-EMIT
-ENVIRONMENT?
-EVALUATE
-EXECUTE
-EXIT
-FILL
-FIND
-FM/MOD
-HERE
-HOLD
-I
-IF
-IMMEDIATE
-INVERT
-J
-KEY
-LEAVE
-LITERAL
-LOOP
-LSHIFT
-M*
-MAX
-MIN
-MOD
-MOVE
-NEGATE
-OR
-OVER
-POSTPONE
-QUIT
-R>
-R@
-RECURSE
-REPEAT
-ROT
-RSHIFT
-S"
-S>D
-SIGN
-SM/REM
-SOURCE
-SPACE
-SPACES
-STATE
-SWAP
-THEN
-TYPE
-U.
-U<
-UM*
-UM/MOD
-UNLOOP
-UNTIL
-VARIABLE
-WHILE
-WORD
-XOR
-[
-[']
-[CHAR]
-]
+DOES>				planned in Forth
+DROP				implemented in assembly
+DUP				implemented in assembly
+ELSE				planned in Forth
+EMIT				implemented in assembly
+ENVIRONMENT?		(???)	debatable necessitude
+EVALUATE		(???)	planned in assembly
+EXECUTE				implemented in assembly
+EXIT				implemented in assembly
+FILL			(???)	planned in Forth (better as `rep stosb`?)
+FIND				implemented in assembly
+FM/MOD			(???)	debatable necessitude
+HERE				implemented in assembly (as variable)
+HOLD			(???)	unplanned as of yet
+I				planned in Forth
+IF				planned in Forth
+IMMEDIATE			planned in Forth
+INVERT				implemented in assembly
+J				planned in Forth
+KEY				implemented in assembly
+LEAVE				planned in Forth
+LITERAL				implemented in assembly?
+LOOP				planned in Forth
+LSHIFT				implemented in assembly
+M*			(???)	debatable necessitude
+MAX				planned in Forth
+MIN				planned in Forth
+MOD				planned in Forth
+MOVE				planned in Forth
+NEGATE				implemented in assembly
+OR				implemented in assembly
+OVER				implemented in assembly
+POSTPONE		(???)	planned in Forth
+QUIT				planned in Forth
+R>				implemented in assembly
+R@				implemented in assembly
+RECURSE				planned in Forth
+REPEAT				planned in Forth
+ROT				implemented in assembly
+RSHIFT				implemented in assembly
+S"				planned in Forth
+S>D			(???)	debatable necessitude
+SIGN			(???)	unplanned as of yet
+SM/REM			(???)	debatable necessitude
+SOURCE				implemented in assembly
+SPACE				planned in Forth
+SPACES				planned in Forth
+STATE			(???)	planned in Forth (as variable)
+SWAP				implemented in assembly
+THEN				planned in Forth
+TYPE				planned in Forth
+U.			(???)	planned in Forth (depends on .)
+U<				planned in assembly
+UM*			(???)	debatable necessitude
+UM/MOD			(???)	debatable necessitude
+UNLOOP				planned in Forth
+UNTIL				planned in Forth
+VARIABLE			planned in Forth
+WHILE				planned in Forth
+WORD				implemented in assembly
+XOR				implemented in assembly
+[			(???)	planned in Forth (depends on STATE)
+[']				planned in Forth
+[CHAR]				planned in Forth
+]			(???)	planned in Forth (depends on STATE)
 
 	Core extension words
 
@@ -199,3 +201,4 @@ WITHIN
 
 LATEST				implemented in assembly
 INTERPRET			planned in Forth (hand-compiled)
+SOURCE-ID			planned in assembly (as variable?)
