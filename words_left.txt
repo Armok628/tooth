@@ -23,7 +23,7 @@ This list is obviously subject to change.
 +				implemented in assembly
 +!				planned in Forth
 +LOOP				planned in Forth
-,			(???)	implemented in assembly (could be Forth? HERE @ 8 ALLOT)
+,			(???)	implemented in assembly (could be Forth : , HERE ! 8 ALLOT ; )
 -				implemented in assembly
 .			(???)	planned in Forth
 ."			(???)	planned in Forth
@@ -53,21 +53,21 @@ This list is obviously subject to change.
 >R				implemented in assembly
 ?DUP				planned in Forth
 @				implemented in assembly
-ABORT			(???)	planned in assembly
+ABORT				planned in Forth ( : ABORT S0 RSP! QUIT ; )
 ABORT"				planned in Forth
 ABS			(???)	planned in Forth
 ACCEPT			(???)	planned in Forth
-ALIGN			(???)	planned in assembly
-ALIGNED			(???)	planned in assembly
+ALIGN				planned in Forth ( : HERE DUP ALIGNED - ALLOT ; )
+ALIGNED				planned in Forth ( : ALIGNED 1- 7 INVERT AND 8 + ; )
 ALLOT				implemented in assembly
 AND				implemented in assembly
 BASE			(???)	planned in Forth
 BEGIN			(???)	debatable necessitude
-BL			(???)	planned in assembly
+BL				implemented in assembly (constant)
 C!				implemented in assembly
 C,				implemented in assembly
 C@				implemented in assembly
-CELL+				implemented in assembly
+CELL+				planned in Forth ( : CELL+ 1+ ; )
 CELLS				planned in Forth
 CHAR				planned in Forth (see KEY)
 CHAR+				planned in Forth
@@ -77,7 +77,7 @@ COUNT				planned in Forth
 CR				planned in Forth
 CREATE			(???)	planned in Forth
 DECIMAL				planned in Forth
-DEPTH				planned in assembly
+DEPTH				planned in Forth ( : DEPTH S0 RSP@ - 3 RSHIFT ; )
 DO				planned in Forth
 DOES>				planned in Forth
 DROP				implemented in assembly
@@ -85,7 +85,7 @@ DUP				implemented in assembly
 ELSE				planned in Forth
 EMIT				implemented in assembly
 ENVIRONMENT?		(???)	debatable necessitude
-EVALUATE			planned in assembly
+EVALUATE			planned in assembly (possible in Forth with more variables)
 EXECUTE				implemented in assembly
 EXIT				implemented in assembly
 FILL			(???)	planned in Forth (better as `rep stosb`?)
@@ -176,7 +176,7 @@ IS				planned in Forth
 MARKER				planned in Forth
 NIP				planned in Forth
 OF				planned in Forth
-PAD			(???)	planned in assembly
+PAD			(???)	planned in assembly (debatable necessitude)
 PARSE			(???)	planned in Forth (better as `repne scasb`?)
 PARSE-NAME		(???)	planned in Forth
 PICK			(???)	planned in Forth (depends on ability to get pointer to TOS)
@@ -185,13 +185,13 @@ RESTORE-INPUT		(???)	unplanned as of yet
 ROLL				planned in Forth
 S\"			(???)	planned in Forth
 SAVE-INPUT		(???)	unplanned as of yet
-SOURCE-ID			planned in assembly
+SOURCE-ID			planned in assembly (possible in Forth with more variables)
 TO			(???)	unplanned as of yet
 TRUE				planned in Forth
 TUCK				planned in Forth
 U.R				planned in Forth
 U>				implemented in assembly
-UNUSED				planned in assembly
+UNUSED				planned in Forth ( : UNUSED HERE 0 SYS_BRK SYSCALL - 3 RSHIFT ; )
 VALUE				planned in Forth
 WITHIN				planned in Forth
 [COMPILE]			planned in Forth
@@ -200,6 +200,7 @@ WITHIN				planned in Forth
 	Additional words
 
 LATEST				implemented in assembly
+BRK				implemented in assembly (pseudo-constant)
 INTERPRET			planned in Forth (hand-compiled)
-SOURCE-ID			planned in assembly (as variable?)
-SYSCALLx			planned in assembly
+SYSCALL				planned in assembly (jump table for number of arguments?)
+NUMBER				planned in assembly

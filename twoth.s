@@ -153,8 +153,26 @@ ASMWORD FROM_R, "R>"
 	push	rax
 	NEXT
 
-ASMWORD R_FETCH, "R@"
+ASMWORD RFETCH, "R@"
 	push	qword [rbp]
+	NEXT
+
+;;;;;;; Direct stack manipulation ;;;;;;;
+
+ASMWORD RSPFETCH, "RSP@"
+	push	rsp
+	NEXT
+
+ASMWORD RSPSTORE, "RSP!"
+	pop	rsp
+	NEXT
+
+ASMWORD RBPFETCH, "RBP@"
+	push	rbp
+	NEXT
+
+ASMWORD RBPSTORE, "RBP!"
+	pop	rbp
 	NEXT
 
 ;;;;;;; Math operations ;;;;;;;
@@ -432,13 +450,14 @@ _FIND: ; rdx=len, rsi=str
 ;;;;;;; Variables/Constants ;;;;;;;
 
 	section .data
-S0:	dq 0 ; To be initialized later
+S0_CONST: dq 0 ; To be initialized later
 last_link: dq LATEST_LINK
 
 FORTHVAR HERE, "HERE" ; To be initialized later
 FORTHCONST BUF_INDEX, ">IN", nextkey
 FORTHCONST R0, "R0", ret_stack
 FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
+FORTHCONST S0, "S0", [S0_CONST]
 
 FORTHCONST LATEST, "LATEST", last_link
 
@@ -462,7 +481,7 @@ FORTHWORD baseinterp, ""
 	dq	DOCOL, $WORD, FIND, EXECUTE, BRANCH, -32
 
 ASMWORD	temp_put_str, ""
-	mov	qword [S0], rsp
+	mov	qword [S0_CONST], rsp
 	mov	rax, SYS_WRITE
 	mov	rdi, STDOUT
 	pop	rdx
