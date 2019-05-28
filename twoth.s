@@ -244,6 +244,8 @@ CMPWORD EQ, "=", je
 CMPWORD NEQ, "<>", jne
 CMPWORD GT, "<", jl
 CMPWORD LT, ">", jg
+CMPWORD ULT, "U>", ja
+CMPWORD UGT, "U<", jb
 
 ;;;;;;; Store/Fetch ;;;;;;;
 
