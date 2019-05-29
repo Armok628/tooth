@@ -85,7 +85,7 @@ DUP				implemented in assembly
 ELSE				planned in Forth
 EMIT				implemented in assembly
 ENVIRONMENT?		(???)	debatable necessitude
-EVALUATE			planned in assembly (possible in Forth with more variables)
+EVALUATE			implemented in assembly (possible in Forth with more variables)
 EXECUTE				implemented in assembly
 EXIT				implemented in assembly
 FILL			(???)	planned in Forth (better as `rep stosb`?)
@@ -176,7 +176,7 @@ IS				planned in Forth
 MARKER				planned in Forth
 NIP				planned in Forth
 OF				planned in Forth
-PAD			(???)	planned in assembly (debatable necessitude)
+PAD				planned in Forth
 PARSE			(???)	planned in Forth (better as `repne scasb`?)
 PARSE-NAME		(???)	planned in Forth
 PICK			(???)	planned in Forth (depends on ability to get pointer to TOS)
@@ -185,7 +185,7 @@ RESTORE-INPUT		(???)	unplanned as of yet
 ROLL				planned in Forth
 S\"			(???)	planned in Forth
 SAVE-INPUT		(???)	unplanned as of yet
-SOURCE-ID			planned in assembly (possible in Forth with more variables)
+SOURCE-ID			implemented in assembly (indirect constant)
 TO			(???)	unplanned as of yet
 TRUE				planned in Forth
 TUCK				planned in Forth
@@ -200,7 +200,6 @@ WITHIN				planned in Forth
 	Additional words
 
 LATEST				implemented in assembly
-BRK				implemented in assembly (pseudo-constant)
 INTERPRET			planned in Forth (hand-compiled)
-SYSCALL				planned in assembly (jump table for number of arguments?)
-NUMBER				planned in assembly
+SYSCALLn			implemented in assembly
+NUMBER			(???)	planned in assembly (likely possible in Forth, but worth it?)

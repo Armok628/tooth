@@ -344,12 +344,25 @@ BUFSIZE equ 256
 
 	section .data
 
-inputbuf: times BUFSIZE db 0
-keycount: dq 0
+termbuf: times BUFSIZE db 0 ; fetch with TIB
+keycount: dq 0 ; fetch with SOURCE
 nextkey: dq 0
 wordbuf: times 64 db 0
 
+inputbuf: dq termbuf ; store with EVALUATE
+source_id: dq 0 ; fetch with SOURCE-ID
+
 	section .text
+
+ASMWORD SOURCE, "SOURCE"
+	push	qword [inputbuf]
+	push	qword [keycount]
+	NEXT
+
+ASMWORD EVALUATE, "EVALUATE"
+	pop	qword [keycount]
+	pop	qword [inputbuf]
+	NEXT
 
 ASMWORD	KEY, "KEY"
 	call	_KEY
@@ -360,14 +373,17 @@ _KEY:
 	mov	rcx, [keycount]			; get keycount
 	cmp	rdx, rcx			; compare
 	jnl	.read 				; if nextkey!<keycount, read
-	movzx	eax, byte [inputbuf+rdx]	; else load next key
+	mov	rax, [inputbuf]
+	movzx	eax, byte [rax+rdx]		; else load next key
 	inc	qword [nextkey]	 		; increment nextkey
 	ret 					; return with key in al
 .read:
+	mov	qword [source_id], 0
+	mov	qword [inputbuf], termbuf
 	push	rdi 				; preserve rdi (for stosb in WORD)
 	mov	rax, SYS_READ 			; need to read more data
 	mov	rdi, STDIN 			; from stdin
-	mov	rsi, inputbuf 			; into inputbuf
+	mov	rsi, termbuf 			; into termbuf
 	mov	rdx, BUFSIZE-1 			; for at most BUFSIZE-1 bytes
 	syscall 				; get the data
 	pop	rdi 				; restore rdi
@@ -375,17 +391,12 @@ _KEY:
 	jz	.exit 				; if no bytes were read, quit
 	mov	qword [keycount], rax		; update keycount
 	mov	qword [nextkey], 1		; update nextkey
-	movzx	eax, byte [inputbuf] 		; get key from buffer
+	movzx	eax, byte [termbuf] 		; get key from buffer
 	ret 					; return with key in al
 .exit:
 	mov	rax, SYS_EXIT
 	xor	rdi, rdi
 	syscall
-
-ASMWORD SOURCE, "SOURCE"
-	push	qword inputbuf
-	push	qword [keycount]
-	NEXT
 
 ASMWORD WORD, "WORD"
 	call	_WORD
@@ -420,10 +431,6 @@ _WORD:
 ASMWORD FIND, "'"
 	pop	rdx ; length
 	pop	rsi ; string
-	call	_FIND
-	push	rax
-	NEXT
-_FIND: ; rdx=len, rsi=str
 	mov	rax, last_link
 .next:
 	mov	rax, [rax] 			; go to next word
@@ -442,10 +449,47 @@ _FIND: ; rdx=len, rsi=str
 	pop	rsi
 	jne	.next 				; if not equal, move on
 	lea	rax, [rax+8+1+rdx+1]		; else load xt into rax
-	ret					; return the xt
+	push	rax
+	NEXT					; return the xt
 .undef:						; if not found:
-	xor	rax, rax			; return 0
-	ret
+	push	qword 0
+	NEXT
+
+;;;;;;; System call ;;;;;;;
+
+
+ASMWORD SYSCALL0, "SYSCALL0"
+	jmp	syscall0
+ASMWORD SYSCALL1, "SYSCALL1"
+	jmp	syscall1
+ASMWORD SYSCALL2, "SYSCALL2"
+	jmp	syscall2
+ASMWORD SYSCALL3, "SYSCALL3"
+	jmp	syscall3
+ASMWORD SYSCALL4, "SYSCALL4"
+	jmp	syscall4
+ASMWORD SYSCALL5, "SYSCALL5"
+	jmp	syscall5
+ASMWORD SYSCALL6, "SYSCALL6"
+	jmp	syscall6
+
+syscall6:
+	pop	r9
+syscall5:
+	pop	r8
+syscall4:
+	pop	r10
+syscall3:
+	pop	rdx
+syscall2:
+	pop	rsi
+syscall1:
+	pop	rdi
+syscall0:
+	pop	rax
+	syscall
+	push	rax
+	NEXT
 
 ;;;;;;; Variables/Constants ;;;;;;;
 
@@ -458,6 +502,8 @@ FORTHCONST BUF_INDEX, ">IN", nextkey
 FORTHCONST R0, "R0", ret_stack
 FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
 FORTHCONST S0, "S0", [S0_CONST]
+FORTHCONST SOURCE_ID, "SOURCE-ID", [source_id]
+FORTHCONST TIB, "TIB", termbuf
 
 FORTHCONST LATEST, "LATEST", last_link
 
