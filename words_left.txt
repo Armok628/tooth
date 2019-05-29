@@ -191,7 +191,7 @@ TRUE				planned in Forth
 TUCK				planned in Forth
 U.R				planned in Forth
 U>				implemented in assembly
-UNUSED				planned in Forth ( : UNUSED HERE 0 SYS_BRK SYSCALL - 3 RSHIFT ; )
+UNUSED				planned in Forth ( : UNUSED HERE SYS_BRK 0 SYSCALL1 - 3 RSHIFT ; )
 VALUE				planned in Forth
 WITHIN				planned in Forth
 [COMPILE]			planned in Forth
@@ -202,4 +202,4 @@ WITHIN				planned in Forth
 LATEST				implemented in assembly
 INTERPRET			planned in Forth (hand-compiled)
 SYSCALLn			implemented in assembly
-NUMBER			(???)	planned in assembly (likely possible in Forth, but worth it?)
+NUMBER				planned in assembly (prototype complete)

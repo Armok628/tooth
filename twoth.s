@@ -267,39 +267,26 @@ CMPWORD ULT, "U>", ja
 
 ;;;;;;; Store/Fetch ;;;;;;;
 
-ASMWORD FETCH, "!" ; ( addr -- qword )
+ASMWORD STORE, "!" ; ( qword addr -- )
+	pop	rdi
+	pop	qword [rdi]
+	NEXT
+
+ASMWORD FETCH, "@" ; ( addr -- qword )
 	pop	rsi
 	push	qword [rsi]
 	NEXT
 
-ASMWORD BYTEFETCH, "C!" ; ( addr -- byte )
+ASMWORD BYTESTORE, "C!" ; ( byte addr -- )
+	pop	rdi
+	pop	rax
+	mov	byte [rdi], al
+	NEXT
+
+ASMWORD BYTEFETCH, "C@" ; ( addr -- byte )
 	pop	rsi
 	movzx	eax, byte [rsi]
 	push	rax
-	NEXT
-
-ASMWORD STORE, "@" ; ( qword addr -- )
-	pop	rdi
-	pop	qword [rdi]
-	NEXT
-
-ASMWORD BYTESTORE, "C@" ; ( byte addr -- )
-	pop	rdi
-	pop	rax
-	mov	byte [rdi], al
-	NEXT
-
-ASMWORD COMMA, ","
-	mov	rdi, [HERE_VAR]
-	pop	qword [rdi]
-	add	qword [HERE_VAR], 8
-	NEXT
-
-ASMWORD BYTECOMMA, "C,"
-	pop	rax
-	mov	rdi, [HERE_VAR]
-	mov	byte [rdi], al
-	inc	qword [HERE_VAR]
 	NEXT
 
 ASMWORD ALLOT, "ALLOT"
@@ -347,10 +334,12 @@ BUFSIZE equ 256
 termbuf: times BUFSIZE db 0 ; fetch with TIB
 keycount: dq 0 ; fetch with SOURCE
 nextkey: dq 0
-wordbuf: times 64 db 0
+wordbuf: times 64 db 0 ; fetch with PAD
 
 inputbuf: dq termbuf ; store with EVALUATE
 sourceid: dq 0 ; fetch with SOURCE-ID
+
+base: dq 10 ; fetch address with BASE
 
 	section .text
 
@@ -411,9 +400,28 @@ ASMWORD WORD, "WORD"
 	push	rdi 				; word length
 	NEXT
 
+ASMWORD NUMBER, "NUMBER" ; Unfinished; can only read decimal
+	pop	rcx				; get string length
+	pop	rsi				; get string address
+	mov	rdi, qword [base]		; get number base
+	xor	rax, rax			; clear total
+.loop:
+	test	rcx, rcx			; characters left?
+	jz	.done				; if not, finish up
+	mul	rdi				; multiply total by base
+	movzx	edx, byte [rsi]			; get next digit
+	sub	rdx, '0'			; get digit value
+	inc	rsi				; increment string pointer
+	add	rax, rdx			; add to total
+	dec	rcx				; one character down
+	jmp	.loop				; get more characters
+.done:						; when finished:
+	push	rax				; push total
+	NEXT
+
 ;;;;;;; Execution Token Finder ;;;;;;;
 
-ASMWORD FIND, "'"
+ASMWORD FIND, "FIND"
 	pop	rdx ; length
 	pop	rsi ; string
 	mov	rax, last_link
@@ -437,7 +445,9 @@ ASMWORD FIND, "'"
 	push	rax
 	NEXT					; return the xt
 .undef:						; if not found:
-	push	qword 0
+	push	rsi				; put string back
+	push	rdx				; put length back
+	push	qword 0				; leave zero on top
 	NEXT
 
 ;;;;;;; System call ;;;;;;;
@@ -489,6 +499,8 @@ FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
 FORTHCONST S0, "S0", [S0_CONST]
 FORTHCONST SOURCE_ID, "SOURCE-ID", [sourceid]
 FORTHCONST TIB, "TIB", termbuf
+FORTHCONST PAD, "PAD", wordbuf
+FORTHCONST BASE, "BASE", base
 
 FORTHCONST LATEST, "LATEST", last_link
 
