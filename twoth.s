@@ -262,8 +262,8 @@ CMPWORD EQ, "=", je
 CMPWORD NEQ, "<>", jne
 CMPWORD GT, "<", jl
 CMPWORD LT, ">", jg
-CMPWORD ULT, "U>", ja
 CMPWORD UGT, "U<", jb
+CMPWORD ULT, "U>", ja
 
 ;;;;;;; Store/Fetch ;;;;;;;
 
@@ -350,7 +350,7 @@ nextkey: dq 0
 wordbuf: times 64 db 0
 
 inputbuf: dq termbuf ; store with EVALUATE
-source_id: dq 0 ; fetch with SOURCE-ID
+sourceid: dq 0 ; fetch with SOURCE-ID
 
 	section .text
 
@@ -369,34 +369,29 @@ ASMWORD	KEY, "KEY"
 	push	rax
 	NEXT
 _KEY:
-	mov	rdx, [nextkey]			; get nextkey
-	mov	rcx, [keycount]			; get keycount
-	cmp	rdx, rcx			; compare
-	jnl	.read 				; if nextkey!<keycount, read
-	mov	rax, [inputbuf]
-	movzx	eax, byte [rax+rdx]		; else load next key
-	inc	qword [nextkey]	 		; increment nextkey
-	ret 					; return with key in al
+	mov	rcx, qword [nextkey]		; get next key index
+	cmp	rcx, qword [keycount]		; compare to # chars in buffer
+	jge	.read				; if too high, get more input
+	inc	qword [nextkey]			; else increment next key index
+	mov	rax, qword [inputbuf]		; get pointer to input buffer
+	movzx	eax, byte [rax+rcx]		; get key from buffer
+	ret					; return it
 .read:
-	mov	qword [source_id], 0
-	mov	qword [inputbuf], termbuf
-	push	rdi 				; preserve rdi (for stosb in WORD)
-	mov	rax, SYS_READ 			; need to read more data
-	mov	rdi, STDIN 			; from stdin
-	mov	rsi, termbuf 			; into termbuf
-	mov	rdx, BUFSIZE-1 			; for at most BUFSIZE-1 bytes
-	syscall 				; get the data
-	pop	rdi 				; restore rdi
-	test	al, al				; check number of bytes read
-	jz	.exit 				; if no bytes were read, quit
-	mov	qword [keycount], rax		; update keycount
-	mov	qword [nextkey], 1		; update nextkey
-	movzx	eax, byte [termbuf] 		; get key from buffer
-	ret 					; return with key in al
-.exit:
-	mov	rax, SYS_EXIT
-	xor	rdi, rdi
-	syscall
+	mov	rsi, termbuf			; load terminal buffer address
+	mov	qword [inputbuf], rsi		; store as pointer to input buffer
+	mov	qword [sourceid], 0		; reset SOURCE_ID
+	push	rdi				; preserve rdi for stosb in word
+	mov	rax, SYS_READ
+	mov	rdi, STDIN
+	mov	rdx, BUFSIZE
+	syscall					; read(0,termbuf,BUFSIZE)
+	pop	rdi				; restore rdi
+	test	rax, rax			; check for any bytes read
+	jz	BYE_ASM 			; if none, exit
+	mov	qword [keycount], rax		; else set keycount
+	mov	qword [nextkey], 1		; reset next key index
+	movzx	eax, byte [termbuf]		; load first key
+	ret					; return key in rax
 
 ASMWORD WORD, "WORD"
 	mov	rdi, wordbuf
@@ -492,7 +487,7 @@ FORTHCONST BUF_INDEX, ">IN", nextkey
 FORTHCONST R0, "R0", ret_stack
 FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
 FORTHCONST S0, "S0", [S0_CONST]
-FORTHCONST SOURCE_ID, "SOURCE-ID", [source_id]
+FORTHCONST SOURCE_ID, "SOURCE-ID", [sourceid]
 FORTHCONST TIB, "TIB", termbuf
 
 FORTHCONST LATEST, "LATEST", last_link
