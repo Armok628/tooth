@@ -147,7 +147,7 @@ XOR				implemented in assembly
 
 	Core extension words
 
-.(			(???)	debatable necessitude (cognate with .")
+.(				planned in Forth
 .R				planned in Forth
 0<>				planned in Forth
 0>				planned in Forth

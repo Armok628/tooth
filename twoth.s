@@ -399,32 +399,22 @@ _KEY:
 	syscall
 
 ASMWORD WORD, "WORD"
-	call	_WORD
-	push	qword wordbuf
-	push	rdi 				; word length
-	NEXT
-_WORD:
 	mov	rdi, wordbuf
 .start:
 	call	_KEY 				; get a key in al
 	cmp	al, byte ' '
 	jle	.start 				; if key is whitespace, try again
-	cmp	al, byte '('
-	je	.skip 				; if key is '(', skip comment
 .key:
 	stosb 					; store key
 	call	_KEY 				; get a key in al
 	cmp	al, byte ' '
 	jle	.end 				; if key is whitespace, finish
 	jmp	.key 				; continue
-.skip:
-	call	_KEY 				; get a key in al
-	cmp	al, byte `)`
-	jne	.skip 				; if key is not newline, continue
-	jmp	.start 				; try again for word
 .end:
 	sub	rdi, wordbuf			; put length in rdi
-	ret
+	push	qword wordbuf
+	push	rdi 				; word length
+	NEXT
 
 ;;;;;;; Execution Token Finder ;;;;;;;
 
