@@ -202,4 +202,4 @@ WITHIN				planned in Forth
 LATEST				implemented in assembly
 INTERPRET			planned in Forth (hand-compiled)
 SYSCALLn			implemented in assembly
-NUMBER				planned in assembly (prototype complete)
+NUMBER				implemented in assembly

@@ -118,7 +118,7 @@ ASMWORD	DUP, "DUP" ; ( a -- a a )
 	NEXT
 
 ASMWORD	DROP, "DROP" ; ( a -- )
-	sub	rsp, 8
+	add	rsp, 8
 	NEXT
 
 ASMWORD SWAP, "SWAP" ; ( a b -- b a )
@@ -353,7 +353,7 @@ ASMWORD EVALUATE, "EVALUATE"
 	pop	qword [inputbuf]
 	NEXT
 
-ASMWORD	KEY, "KEY"
+ASMWORD	KEY, "KEY" ; ( -- c )
 	call	_KEY
 	push	rax
 	NEXT
@@ -382,7 +382,7 @@ _KEY:
 	movzx	eax, byte [termbuf]		; load first key
 	ret					; return key in rax
 
-ASMWORD WORD, "WORD"
+ASMWORD WORD, "WORD" ; ( -- addr u )
 	mov	rdi, wordbuf
 .start:
 	call	_KEY 				; get a key in al
@@ -400,28 +400,50 @@ ASMWORD WORD, "WORD"
 	push	rdi 				; word length
 	NEXT
 
-ASMWORD NUMBER, "NUMBER" ; Unfinished; can only read decimal
+ASMWORD NUMBER, "NUMBER" ; ( addr u -- n err )
 	pop	rcx				; get string length
 	pop	rsi				; get string address
 	mov	rdi, qword [base]		; get number base
 	xor	rax, rax			; clear total
+	cmp	byte [rsi], '-'			; check for negative
+	push	qword 0				; push 0 in case it isn't
+	jne	.loop				; continue if nonnegative
+	mov	qword [rsp], 1			; else replace 0 with 1
+	inc	rsi				; skip negative sign
+	dec	rcx
 .loop:
 	test	rcx, rcx			; characters left?
-	jz	.done				; if not, finish up
+	jz	.sign				; if not, finish up
 	mul	rdi				; multiply total by base
 	movzx	edx, byte [rsi]			; get next digit
-	sub	rdx, '0'			; get digit value
-	inc	rsi				; increment string pointer
+	sub	dl, '0'				; get digit's value
+	jb	.sign				; if <0, exit early
+	cmp	dl, 10
+	jl	.chkbase			; if <10, move on
+	sub	dl, 'A'-'0'-10			; get digit's A-Z value
+	cmp	dl, 10
+	jb	.sign				; if <10, exit early
+.chkbase:
+	cmp	rdx, rdi
+	jge	.sign				; if >base, exit early
+.add_dig:
 	add	rax, rdx			; add to total
+	inc	rsi				; increment string pointer
 	dec	rcx				; one character down
 	jmp	.loop				; get more characters
-.done:						; when finished:
+.sign:						; when finished:
+	pop	rdx				; check if it was negative
+	test	rdx, rdx
+	jz	.done				; if not, return
+	neg	rax				; else negate
+.done:
 	push	rax				; push total
+	push	rcx				; push # of remaining characters
 	NEXT
 
 ;;;;;;; Execution Token Finder ;;;;;;;
 
-ASMWORD FIND, "FIND"
+ASMWORD FIND, "FIND" ; ( addr u -- xt ~0 | addr u 0 )
 	pop	rdx ; length
 	pop	rsi ; string
 	mov	rax, last_link
@@ -442,12 +464,13 @@ ASMWORD FIND, "FIND"
 	pop	rsi
 	jne	.next 				; if not equal, move on
 	lea	rax, [rax+8+1+rdx+1]		; else load xt into rax
-	push	rax
+	push	rax				; push xt
+	push	qword ~0			; push success code
 	NEXT					; return the xt
 .undef:						; if not found:
 	push	rsi				; put string back
 	push	rdx				; put length back
-	push	qword 0				; leave zero on top
+	push	qword 0				; leave failure code
 	NEXT
 
 ;;;;;;; System call ;;;;;;;
@@ -521,7 +544,9 @@ init_data_seg:
 ;;;;;;; Testing code ;;;;;;;
 
 FORTHWORD baseinterp, ""
-	dq	DOCOL, $WORD, FIND, EXECUTE, BRANCH, -32
+	dq	DOCOL, $WORD, FIND, ZBRANCH, 32, EXECUTE, BRANCH, -48, \
+			NUMBER, ZBRANCH, -72, DROP, \
+			LIT, '?', EMIT, BRANCH, -120
 
 ASMWORD	temp_put_str, ""
 	mov	qword [S0_CONST], rsp
