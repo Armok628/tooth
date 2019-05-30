@@ -443,7 +443,7 @@ ASMWORD NUMBER, "NUMBER" ; ( addr u -- n err )
 
 ;;;;;;; Execution Token Finder ;;;;;;;
 
-ASMWORD FIND, "FIND" ; ( addr u -- xt ~0 | addr u 0 )
+ASMWORD FIND, "FIND" ; ( addr u -- xt -1 | xt 1 | addr u 0 )
 	pop	rdx ; length
 	pop	rsi ; string
 	mov	rax, last_link
@@ -462,11 +462,16 @@ ASMWORD FIND, "FIND" ; ( addr u -- xt ~0 | addr u 0 )
 	push	rsi
 	repe	cmpsb 				; compare strings
 	pop	rsi
-	jne	.next 				; if not equal, move on
-	lea	rax, [rax+8+1+rdx+1]		; else load xt into rax
+	jne	.next 				; if not equal, try again
+	movzx	ecx, byte [rax+8]		; else reload length|flags
+	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
 	push	rax				; push xt
-	push	qword ~0			; push success code
-	NEXT					; return the xt
+	test	cl, F_IMM			; test for immediacy
+	jnz	.imm				; if so, push 1
+	push	qword -1			; else push -1
+	NEXT
+.imm:	push	qword 1
+	NEXT
 .undef:						; if not found:
 	push	rsi				; put string back
 	push	rdx				; put length back
