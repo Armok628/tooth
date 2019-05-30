@@ -16,13 +16,13 @@
 	sub	rbp, 8
 %endmacro
 
-%define LASTLINK 0
+%define PREVLINK 0
 
 %macro DICTLINK 2-3 0
 	section	.rodata
 %1_LINK:
-	dq	$%[LASTLINK]
-	%define LASTLINK %1_LINK
+	dq	$%[PREVLINK]
+	%define PREVLINK %1_LINK
 	%strlen l %2
 	db	%3|%[l],%2,0
 	%undef l
@@ -291,7 +291,7 @@ ASMWORD BYTEFETCH, "C@" ; ( addr -- byte )
 
 ASMWORD ALLOT, "ALLOT"
 	pop	rax
-	add	qword [HERE_VAR], rax
+	add	qword [here], rax
 	NEXT
 
 ;;;;;;; Branching ;;;;;;;
@@ -333,7 +333,7 @@ BUFSIZE equ 256
 
 termbuf: times BUFSIZE db 0 ; fetch with TIB
 keycount: dq 0 ; fetch with SOURCE
-nextkey: dq 0
+nextkey: dq 0 ; fetch with >IN
 wordbuf: times 64 db 0 ; fetch with PAD
 
 inputbuf: dq termbuf ; store with EVALUATE
@@ -516,11 +516,7 @@ syscall0:
 
 ;;;;;;; Variables/Constants ;;;;;;;
 
-	section .data
-S0_CONST: dq 0 ; To be initialized later
-last_link: dq LATEST_LINK
-
-FORTHVAR HERE, "HERE" ; To be initialized later
+FORTHCONST HERE, "HERE", [here]
 FORTHCONST BUF_INDEX, ">IN", nextkey
 FORTHCONST R0, "R0", ret_stack
 FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
@@ -532,6 +528,11 @@ FORTHCONST BASE, "BASE", base
 
 FORTHCONST LATEST, "LATEST", last_link
 
+	section .data
+S0_CONST: dq 0 ; To be initialized later
+here: dq 0 ; To be initialized later
+last_link: dq PREVLINK
+
 ;;;;;;; Data segment setup ;;;;;;;
 
 DATA_SEG_SIZE equ 4096
@@ -540,7 +541,7 @@ init_data_seg:
 	xor	rdi, rdi
 	mov	rax, SYS_BRK
 	syscall
-	mov	qword [HERE_VAR], rax
+	mov	qword [here], rax
 	lea	rdi, [rax+DATA_SEG_SIZE]
 	mov	rax, SYS_BRK
 	syscall
