@@ -357,7 +357,7 @@ ASMWORD	KEY, "KEY" ; ( -- c )
 	call	_KEY
 	push	rax
 	NEXT
-_KEY:
+_KEY: ; => al=key
 	mov	rcx, qword [nextkey]		; get next key index
 	cmp	rcx, qword [keycount]		; compare to # chars in buffer
 	jge	.read				; if too high, get more input
@@ -382,7 +382,13 @@ _KEY:
 	movzx	eax, byte [termbuf]		; load first key
 	ret					; return key in rax
 
-ASMWORD WORD, "WORD" ; ( -- addr u )
+ASMWORD WORD, "WORD", F_IMM ; ( -- addr u )
+	call	_WORD
+	push	rsi
+	push	rdx
+	NEXT
+
+_WORD: ; => rsi=str, rdx=len
 	mov	rdi, wordbuf
 .start:
 	call	_KEY 				; get a key in al
@@ -395,10 +401,10 @@ ASMWORD WORD, "WORD" ; ( -- addr u )
 	jle	.end 				; if key is whitespace, finish
 	jmp	.key 				; continue
 .end:
-	sub	rdi, wordbuf			; put length in rdi
-	push	qword wordbuf
-	push	rdi 				; word length
-	NEXT
+	mov	rsi, wordbuf			; load string into rsi
+	mov	rdx, rdi
+	sub	rdx, rsi			; load length into rdx
+	ret
 
 ASMWORD NUMBER, "NUMBER" ; ( addr u -- n err )
 	pop	rcx				; get string length
@@ -441,11 +447,30 @@ ASMWORD NUMBER, "NUMBER" ; ( addr u -- n err )
 	push	rcx				; push # of remaining characters
 	NEXT
 
-;;;;;;; Execution Token Finder ;;;;;;;
+;;;;;;; Execution token finders ;;;;;;;
 
 ASMWORD FIND, "FIND" ; ( addr u -- xt -1 | xt 1 | addr u 0 )
 	pop	rdx ; length
 	pop	rsi ; string
+	call	_FIND
+	test	rcx, rcx
+	jz	.notfound
+	push	rax
+	push	rcx
+	NEXT
+.notfound:
+	push	rsi
+	push	rdx
+	push	rcx
+	NEXT
+
+ASMWORD TICK, "'", F_IMM
+	call	_WORD
+	call	_FIND
+	push	rax
+	NEXT
+
+_FIND: ; rsi=str, rdx=len => rsi=str, rdx=len, rax=xt, rcx=err
 	mov	rax, last_link
 .next:
 	mov	rax, [rax] 			; go to next word
@@ -465,18 +490,16 @@ ASMWORD FIND, "FIND" ; ( addr u -- xt -1 | xt 1 | addr u 0 )
 	jne	.next 				; if not equal, try again
 	movzx	ecx, byte [rax+8]		; else reload length|flags
 	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
-	push	rax				; push xt
 	test	cl, F_IMM			; test for immediacy
-	jnz	.imm				; if so, push 1
-	push	qword -1			; else push -1
-	NEXT
-.imm:	push	qword 1
-	NEXT
+	mov	rcx, 1				; set found status to immediate
+	jnz	.imm				; if immediate, return
+	neg	rcx				; else set found status to normal
+.imm:
+	ret
 .undef:						; if not found:
-	push	rsi				; put string back
-	push	rdx				; put length back
-	push	qword 0				; leave failure code
-	NEXT
+	xor	rax, rax			; set xt to 0
+	xor	rcx, rcx			; set found status to 0
+	ret
 
 ;;;;;;; System call ;;;;;;;
 
@@ -534,6 +557,8 @@ here: dq 0 ; To be initialized later
 last_link: dq PREVLINK
 
 ;;;;;;; Data segment setup ;;;;;;;
+
+	section .text
 
 DATA_SEG_SIZE equ 4096
 
