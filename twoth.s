@@ -97,7 +97,7 @@ ASMWORD	EXIT, "EXIT"
 	RPOP	rbx
 	NEXT
 
-ASMWORD	LIT, "LIT"
+ASMWORD	LITERAL, "LITERAL"
 	push	qword [rbx]
 	add	rbx, 8
 	NEXT
@@ -338,7 +338,7 @@ BUFSIZE equ 256
 termbuf: times BUFSIZE db 0 ; fetch with TIB
 keycount: dq 0 ; fetch with SOURCE
 nextkey: dq 0 ; fetch with >IN
-wordbuf: times 64 db 0 ; fetch with PAD
+pad: times 64 db 0 ; fetch with PAD
 
 inputbuf: dq termbuf ; store with EVALUATE
 sourceid: dq 0 ; fetch with SOURCE-ID
@@ -393,7 +393,7 @@ ASMWORD WORD, "WORD", F_IMM ; ( -- addr u )
 	NEXT
 
 _WORD: ; => rsi=str, rdx=len
-	mov	rdi, wordbuf
+	mov	rdi, pad
 .start:
 	call	_KEY 				; get a key in al
 	cmp	al, byte ' '
@@ -405,7 +405,7 @@ _WORD: ; => rsi=str, rdx=len
 	jle	.end 				; if key is whitespace, finish
 	jmp	.key 				; continue
 .end:
-	mov	rsi, wordbuf			; load string into rsi
+	mov	rsi, pad			; load string into rsi
 	mov	rdx, rdi
 	sub	rdx, rsi			; load length into rdx
 	ret
@@ -550,19 +550,11 @@ FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
 FORTHCONST S0, "S0", [S0_CONST]
 FORTHCONST SOURCE_ID, "SOURCE-ID", [sourceid]
 FORTHCONST TIB, "TIB", termbuf
-FORTHCONST PAD, "PAD", wordbuf
+FORTHCONST PAD, "PAD", pad
 FORTHCONST BASE, "BASE", base
+FORTHCONST F_IMM_CONST, "F_IMM", F_IMM
 
 FORTHCONST LATEST, "LATEST", last_link
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FORTHWORD testword, `,\"`
-	dq	DOCOL, KEY, DUP, LIT, '"', NEQ, ZBRANCH, 64, \
-			HERE, CSTORE, LIT, 1, ALLOT, BRANCH, -104, \
-			DROP, EXIT
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	section .data
 S0_CONST: dq 0 ; To be initialized later
@@ -590,7 +582,7 @@ init_data_seg:
 FORTHWORD baseinterp, ""
 	dq	DOCOL, $WORD, FIND, ZBRANCH, 32, EXECUTE, BRANCH, -48, \
 			NUMBER, ZBRANCH, -72, DROP, \
-			LIT, '?', EMIT, BRANCH, -120
+			LITERAL, '?', EMIT, BRANCH, -120
 
 ASMWORD	temp_put_str, ""
 	mov	qword [S0_CONST], rsp
