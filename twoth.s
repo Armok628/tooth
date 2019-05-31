@@ -261,9 +261,13 @@ ASMWORD %1, %2
 CMPWORD EQ, "=", je
 CMPWORD NEQ, "<>", jne
 CMPWORD GT, "<", jl
+CMPWORD GTE, "<=", jle
 CMPWORD LT, ">", jg
+CMPWORD LTE, ">=", jge
 CMPWORD UGT, "U<", jb
+CMPWORD UGTE, "U<=", jbe
 CMPWORD ULT, "U>", ja
+CMPWORD ULTE, "U>=", jae
 
 ;;;;;;; Store/Fetch ;;;;;;;
 
@@ -277,13 +281,13 @@ ASMWORD FETCH, "@" ; ( addr -- qword )
 	push	qword [rsi]
 	NEXT
 
-ASMWORD BYTESTORE, "C!" ; ( byte addr -- )
+ASMWORD CSTORE, "C!" ; ( byte addr -- )
 	pop	rdi
 	pop	rax
 	mov	byte [rdi], al
 	NEXT
 
-ASMWORD BYTEFETCH, "C@" ; ( addr -- byte )
+ASMWORD CFETCH, "C@" ; ( addr -- byte )
 	pop	rsi
 	movzx	eax, byte [rsi]
 	push	rax
@@ -550,6 +554,15 @@ FORTHCONST PAD, "PAD", wordbuf
 FORTHCONST BASE, "BASE", base
 
 FORTHCONST LATEST, "LATEST", last_link
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FORTHWORD testword, `,\"`
+	dq	DOCOL, KEY, DUP, LIT, '"', NEQ, ZBRANCH, 64, \
+			HERE, CSTORE, LIT, 1, ALLOT, BRANCH, -104, \
+			DROP, EXIT
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	section .data
 S0_CONST: dq 0 ; To be initialized later
