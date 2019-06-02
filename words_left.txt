@@ -16,7 +16,7 @@ This list is obviously subject to change.
 #>			(???)	unplanned as of yet
 #S			(???)	unplanned as of yet
 '				implemented in assembly
-(				implemented by proxy, see _WORD (could be Forth)
+(				planned in Forth
 *				implemented in assembly
 */				planned in Forth
 */MOD				planned in Forth
@@ -26,13 +26,13 @@ This list is obviously subject to change.
 ,				implemented in Forth
 -				implemented in assembly
 .			(???)	planned in Forth
-."			(???)	planned in Forth
+."				planned in Forth
 /				planned in Forth
 /MOD				implemented in assembly
 0<				planned in Forth
 0=				planned in Forth
-1+				planned in Forth
-1-				planned in Forth
+1+				implemented in assembly
+1-				implemented in assembly
 2!			(???)	debatable necessitude
 2*			(???)	debatable necessitude
 2/			(???)	debatable necessitude
@@ -47,21 +47,21 @@ This list is obviously subject to change.
 <#			(???)	unplanned as of yet
 =				implemented in assembly
 >				implemented in assembly
->BODY			(???)	planned in Forth
+>BODY				planned in Forth
 >IN				implemented in assembly (as constant)
->NUMBER			(???)	planned in Forth
+>NUMBER				implemented in assembly
 >R				implemented in assembly
 ?DUP				planned in Forth
 @				implemented in assembly
 ABORT				planned in Forth ( : ABORT S0 RSP! QUIT ; )
 ABORT"				planned in Forth
-ABS			(???)	planned in Forth
-ACCEPT			(???)	planned in Forth
+ABS				planned in Forth ( : ABS DUP IF NEGATE THEN ; )
+ACCEPT				planned in Forth
 ALIGN				planned in Forth ( : HERE DUP ALIGNED - ALLOT ; )
 ALIGNED				planned in Forth ( : ALIGNED 1- 7 INVERT AND 8 + ; )
 ALLOT				implemented in assembly
 AND				implemented in assembly
-BASE			(???)	planned in Forth
+BASE				implemented in assembly (variable)
 BEGIN			(???)	debatable necessitude
 BL				implemented in assembly (constant)
 C!				implemented in assembly
@@ -111,7 +111,7 @@ MOVE				planned in Forth
 NEGATE				implemented in assembly
 OR				implemented in assembly
 OVER				implemented in assembly
-POSTPONE		(???)	planned in Forth
+POSTPONE			planned in Forth
 QUIT				planned in Forth
 R>				implemented in assembly
 R@				implemented in assembly
@@ -130,7 +130,7 @@ STATE				planned in Forth (as variable)
 SWAP				implemented in assembly
 THEN				planned in Forth
 TYPE				planned in Forth
-U.			(???)	planned in Forth (depends on .)
+U.			(???)	planned in Forth (same as .)
 U<				implemented in assembly
 UM*			(???)	debatable necessitude
 UM/MOD			(???)	debatable necessitude
@@ -151,9 +151,9 @@ XOR				implemented in assembly
 .R				planned in Forth
 0<>				planned in Forth
 0>				planned in Forth
-2>R			(???)	debatable necessitude (perhaps for compatibility)
-2R>			(???)	debatable necessitude (perhaps for compatibility)
-2R@			(???)	debatable necessitude (perhaps for compatibility)
+2>R			(???)	debatable necessitude
+2R>			(???)	debatable necessitude
+2R@			(???)	debatable necessitude
 :NONAME				planned in Forth
 <>				implemented in assembly
 ?DO			(???)	planned in Forth
@@ -169,7 +169,7 @@ DEFER@				planned in Forth
 ENDCASE				planned in Forth
 ENDOF				planned in Forth
 ERASE				planned in Forth
-FALSE				planned in Forth
+FALSE				planned in Forth ( : FALSE 0 ; )
 HEX				planned in Forth
 HOLDS			(???)	unplanned as of yet
 IS				planned in Forth
@@ -187,7 +187,7 @@ S\"			(???)	planned in Forth
 SAVE-INPUT		(???)	unplanned as of yet
 SOURCE-ID			implemented in assembly (indirect constant)
 TO			(???)	unplanned as of yet
-TRUE				planned in Forth
+TRUE				planned in Forth ( : TRUE 1 ; )
 TUCK				planned in Forth
 U.R				planned in Forth
 U>				implemented in assembly
@@ -195,12 +195,13 @@ UNUSED				planned in Forth ( : UNUSED HERE SYS_BRK 0 SYSCALL1 - 3 RSHIFT ; )
 VALUE				planned in Forth
 WITHIN				planned in Forth
 [COMPILE]			planned in Forth
-\			(???)	planned in Forth (better as case of WORD?)
+\				planned in Forth
 
 	Additional words
 
 LATEST				implemented in assembly
 INTERPRET			planned in Forth (hand-compiled)
 SYSCALLn			implemented in assembly
-NUMBER				implemented in assembly
 HEADER				implemented in Forth
+CONTINUE			planned in Forth
+BREAK				planned in Forth
