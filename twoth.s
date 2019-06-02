@@ -451,30 +451,24 @@ ASMWORD NUMBER, "NUMBER" ; ( addr u -- n err )
 	push	rcx				; push # of remaining characters
 	NEXT
 
-;;;;;;; Execution token finders ;;;;;;;
+;;;;;;; "Finding" words ;;;;;;;
 
 ASMWORD FIND, "FIND" ; ( addr u -- xt -1 | xt 1 | addr u 0 )
-	pop	rdx ; length
-	pop	rsi ; string
-	call	_FIND
-	test	rcx, rcx
-	jz	.notfound
-	push	rax
-	push	rcx
+	pop	rdx				; get string length
+	pop	rsi				; get string address
+	call	_FIND				; load entry into rax
+	test	rcx, rcx			; test error
+	jz	.notfound			; if no error:
+	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
+	push	rax				; push xt
+	push	rcx				; push error
 	NEXT
-.notfound:
-	push	rsi
-	push	rdx
-	push	rcx
+.notfound:					; else:
+	push	rsi				; put string address back
+	push	rdx				; put string length back
+	push	rcx				; leave error code on stack
 	NEXT
-
-ASMWORD TICK, "'", F_IMM
-	call	_WORD
-	call	_FIND
-	push	rax
-	NEXT
-
-_FIND: ; rsi=str, rdx=len => rsi=str, rdx=len, rax=xt, rcx=err
+_FIND: ; rsi=str, rdx=len => rsi=str, rdx=len, rax=entry, rcx=-1|0|1
 	mov	rax, last_link
 .next:
 	mov	rax, [rax] 			; go to next word
@@ -488,22 +482,28 @@ _FIND: ; rsi=str, rdx=len => rsi=str, rdx=len, rax=xt, rcx=err
 	jne	.next 				; if not equal, move on
 	lea	rdi, [rax+9] 			; else load entry string
 .cmpstr:
-	push	rsi
+	push	rsi				; save search string
 	repe	cmpsb 				; compare strings
-	pop	rsi
+	pop	rsi				; restore search string
 	jne	.next 				; if not equal, try again
 	movzx	ecx, byte [rax+8]		; else reload length|flags
-	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
 	test	cl, F_IMM			; test for immediacy
-	mov	rcx, 1				; set found status to immediate
-	jnz	.imm				; if immediate, return
-	neg	rcx				; else set found status to normal
+	mov	rcx, 1				; set error to 1 (found, immediate)
+	jnz	.imm				; if immediate, return now
+	neg	rcx				; else set error to -1 (found)
 .imm:
 	ret
 .undef:						; if not found:
-	xor	rax, rax			; set xt to 0
-	xor	rcx, rcx			; set found status to 0
+	xor	rax, rax			; set entry to 0
+	xor	rcx, rcx			; set error to 0 (not found)
 	ret
+
+ASMWORD TICK, "'", F_IMM
+	call	_WORD
+	call	_FIND
+	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
+	push	rax
+	NEXT
 
 ;;;;;;; System call ;;;;;;;
 
