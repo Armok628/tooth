@@ -23,7 +23,7 @@ This list is obviously subject to change.
 +				implemented in assembly
 +!				planned in Forth
 +LOOP				planned in Forth
-,			(???)	implemented in assembly (could be Forth : , HERE ! 8 ALLOT ; )
+,				implemented in Forth
 -				implemented in assembly
 .			(???)	planned in Forth
 ."			(???)	planned in Forth
@@ -65,17 +65,17 @@ BASE			(???)	planned in Forth
 BEGIN			(???)	debatable necessitude
 BL				implemented in assembly (constant)
 C!				implemented in assembly
-C,				implemented in assembly
+C,				implemented in Forth
 C@				implemented in assembly
 CELL+				planned in Forth ( : CELL+ 1+ ; )
 CELLS				planned in Forth
 CHAR				planned in Forth (see KEY)
 CHAR+				planned in Forth
 CHARS				planned in Forth
-CONSTANT			planned in Forth
+CONSTANT			implemented in Forth
 COUNT				planned in Forth
 CR				planned in Forth
-CREATE			(???)	planned in Forth
+CREATE				implemented in Forth
 DECIMAL				planned in Forth
 DEPTH				planned in Forth ( : DEPTH S0 RSP@ - 3 RSHIFT ; )
 DO				planned in Forth
@@ -100,7 +100,7 @@ INVERT				implemented in assembly
 J				planned in Forth
 KEY				implemented in assembly
 LEAVE				planned in Forth
-LITERAL				implemented in assembly?
+LITERAL				implemented in assembly
 LOOP				planned in Forth
 LSHIFT				implemented in assembly
 M*			(???)	debatable necessitude
@@ -126,7 +126,7 @@ SM/REM			(???)	debatable necessitude
 SOURCE				implemented in assembly
 SPACE				planned in Forth
 SPACES				planned in Forth
-STATE			(???)	planned in Forth (as variable)
+STATE				planned in Forth (as variable)
 SWAP				implemented in assembly
 THEN				planned in Forth
 TYPE				planned in Forth
@@ -136,14 +136,14 @@ UM*			(???)	debatable necessitude
 UM/MOD			(???)	debatable necessitude
 UNLOOP				planned in Forth
 UNTIL				planned in Forth
-VARIABLE			planned in Forth
+VARIABLE			implemented in Forth
 WHILE				planned in Forth
 WORD				implemented in assembly
 XOR				implemented in assembly
-[			(???)	planned in Forth (depends on STATE)
+[				planned in Forth
 [']				planned in Forth
 [CHAR]				planned in Forth
-]			(???)	planned in Forth (depends on STATE)
+]				planned in Forth
 
 	Core extension words
 
@@ -203,3 +203,4 @@ LATEST				implemented in assembly
 INTERPRET			planned in Forth (hand-compiled)
 SYSCALLn			implemented in assembly
 NUMBER				implemented in assembly
+HEADER				implemented in Forth
