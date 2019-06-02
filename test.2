@@ -1,4 +1,4 @@
-HERE LATEST DUP @ HERE ! 8 ALLOT
+HERE LATEST DUP @	HERE ! 8 ALLOT
 	1		HERE C! 1 ALLOT
 KEY	,		HERE C! 1 ALLOT
 	0		HERE C! 1 ALLOT
@@ -11,7 +11,7 @@ KEY	,		HERE C! 1 ALLOT
 '	ALLOT		HERE ! 8 ALLOT
 '	EXIT		HERE ! 8 ALLOT
 
-HERE LATEST DUP @ ,
+HERE LATEST DUP @	,
 	2		HERE C! 1 ALLOT
 KEY	C		HERE C! 1 ALLOT
 KEY	,		HERE C! 1 ALLOT
@@ -23,4 +23,48 @@ KEY	,		HERE C! 1 ALLOT
 '	LITERAL		,
 	1		,
 '	ALLOT		,
+'	EXIT		,
+
+HERE LATEST DUP @	,
+	6		C,
+KEY	H		C,
+KEY	E		C,
+KEY	A		C,
+KEY	D		C,
+KEY	E		C,
+KEY	R		C,
+	0		C,
+	!
+	DOCOL		,
+'	HERE		,
+'	LATEST		,
+'	DUP		,
+'	@		,
+'	,		,
+
+'	WORD		,
+
+'	DUP		,
+'	C,		,
+
+'	DUP		,
+'	0BRANCH		,
+	80		,
+'	SWAP		,
+'	DUP		,
+'	C@		,
+'	C,		,
+'	1+		,
+'	SWAP		,
+'	1-		,
+'	BRANCH		,
+	-88		,
+
+'	DROP		,
+'	DROP		,
+'	LITERAL		,
+	0		,
+'	C,		,
+
+'	!		,
 '	EXIT		,
