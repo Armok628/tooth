@@ -122,23 +122,44 @@ ASMWORD	DROP, "DROP" ; ( a -- )
 	NEXT
 
 ASMWORD SWAP, "SWAP" ; ( a b -- b a )
-	pop	rdi
-	pop	rsi
-	push	rdi
-	push	rsi
+	pop	rdi ; b
+	pop	rsi ; a
+	push	rdi ; b
+	push	rsi ; a
 	NEXT
 
 ASMWORD ROT, "ROT" ; ( a b c -- b c a )
-	pop	rdi
-	pop	rsi
-	pop	rdx
-	push	rsi
-	push	rdi
-	push	rdx
+	pop	rdi ; c
+	pop	rsi ; b
+	pop	rdx ; a
+	push	rsi ; b
+	push	rdi ; c
+	push	rdx ; a
+	NEXT
+
+ASMWORD UNROT, "-ROT" ; ( a b c -- c a b )
+	pop	rdi ; c
+	pop	rsi ; b
+	pop	rdx ; a
+	push	rdi ; c
+	push	rdx ; a
+	push	rsi ; b
 	NEXT
 
 ASMWORD OVER, "OVER" ; ( a b -- a b a )
 	push	qword [rsp-8]
+	NEXT
+
+ASMWORD NIP, "NIP" ; ( a b -- b )
+	pop	qword [rsp]
+	NEXT
+
+ASMWORD TUCK, "TUCK" ; (a b -- b a b)
+	pop	rdi ; b
+	pop	rsi ; a
+	push	rdi ; b
+	push	rsi ; a
+	push	rdi ; b
 	NEXT
 
 ;;;;;;; Return stack manipulation ;;;;;;;
@@ -553,6 +574,7 @@ FORTHCONST TIB, "TIB", termbuf
 FORTHCONST PAD, "PAD", pad
 FORTHCONST BASE, "BASE", base
 FORTHCONST F_IMM_CONST, "F_IMM", F_IMM
+FORTHCONST CELL, "CELL", 8
 
 FORTHCONST LATEST, "LATEST", last_link
 
