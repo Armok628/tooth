@@ -431,11 +431,11 @@ _WORD: ; => rsi=str, rdx=len
 	sub	rdx, rsi			; load length into rdx
 	ret
 
-ASMWORD NUMBER, "NUMBER" ; ( addr u -- n err )
+ASMWORD TONUMBER, ">NUMBER" ; ( addr u -- n err )
 	pop	rcx				; get string length
 	pop	rsi				; get string address
+	pop	rax				; get total
 	mov	rdi, qword [base]		; get number base
-	xor	rax, rax			; clear total
 	cmp	byte [rsi], '-'			; check for negative
 	push	qword 0				; push 0 in case it isn't
 	jne	.loop				; continue if nonnegative
@@ -469,6 +469,7 @@ ASMWORD NUMBER, "NUMBER" ; ( addr u -- n err )
 	neg	rax				; else negate
 .done:
 	push	rax				; push total
+	push	rsi				; push string
 	push	rcx				; push # of remaining characters
 	NEXT
 
@@ -599,21 +600,15 @@ init_data_seg:
 	syscall
 	ret
 
-;;;;;;; Testing code ;;;;;;;
+;;;;;;; Base interpreter code ;;;;;;;
 
 FORTHWORD baseinterp, ""
 	dq	DOCOL, $WORD, FIND, ZBRANCH, 32, EXECUTE, BRANCH, -48, \
-			NUMBER, ZBRANCH, -72, DROP, \
-			LITERAL, '?', EMIT, BRANCH, -120
+			LITERAL, 0, UNROT, TONUMBER, ZBRANCH, 24, BRANCH, 32, \
+			DROP, BRANCH, -136, \
+			DROP, DROP, LITERAL, '?', EMIT, BRANCH, -192
 
-ASMWORD	temp_put_str, ""
-	mov	qword [S0_CONST], rsp
-	mov	rax, SYS_WRITE
-	mov	rdi, STDOUT
-	pop	rdx
-	pop	rsi
-	syscall
-	NEXT
+;;;;;;; Executable entry point ;;;;;;;
 
 	global _start
 _start:
