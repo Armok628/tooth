@@ -175,19 +175,19 @@ ASMWORD RFETCH, "R@"
 
 ;;;;;;; Direct stack manipulation ;;;;;;;
 
-ASMWORD RSPFETCH, "RSP@"
+ASMWORD RSPFETCH, "SP@"
 	push	rsp
 	NEXT
 
-ASMWORD RSPSTORE, "RSP!"
+ASMWORD RSPSTORE, "SP!"
 	pop	rsp
 	NEXT
 
-ASMWORD RBPFETCH, "RBP@"
+ASMWORD RBPFETCH, "RP@"
 	push	rbp
 	NEXT
 
-ASMWORD RBPSTORE, "RBP!"
+ASMWORD RBPSTORE, "RP!"
 	pop	rbp
 	NEXT
 
@@ -520,7 +520,7 @@ _FIND: ; rsi=str, rdx=len => rsi=str, rdx=len, rax=entry, rcx=-1|0|1
 	xor	rcx, rcx			; set error to 0 (not found)
 	ret
 
-ASMWORD TICK, "'", F_IMM
+ASMWORD TICK, "'"
 	call	_WORD
 	call	_FIND
 	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
@@ -569,7 +569,7 @@ FORTHCONST HERE, "HERE", [here]
 FORTHCONST BUF_INDEX, ">IN", nextkey
 FORTHCONST R0, "R0", ret_stack
 FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
-FORTHCONST S0, "S0", [S0_CONST]
+FORTHCONST S0_CONST, "S0", [S0]
 FORTHCONST SOURCE_ID, "SOURCE-ID", [sourceid]
 FORTHCONST TIB, "TIB", termbuf
 FORTHCONST PAD, "PAD", pad
@@ -580,7 +580,7 @@ FORTHCONST CELL, "CELL", 8
 FORTHCONST LATEST, "LATEST", last_link
 
 	section .data
-S0_CONST: dq 0 ; To be initialized later
+S0: dq 0 ; To be initialized later
 here: dq 0 ; To be initialized later
 last_link: dq PREVLINK
 
@@ -613,6 +613,7 @@ FORTHWORD baseinterp, ""
 	global _start
 _start:
 	cld
+	mov	qword [S0], rsp
 	call	init_data_seg
 	call	init_ret_stack
 	mov	rbx, entry_point

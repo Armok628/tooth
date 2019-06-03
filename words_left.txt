@@ -41,8 +41,8 @@ This list is obviously subject to change.
 2DUP			(???)	debatable necessitude
 2OVER			(???)	debatable necessitude
 2SWAP			(???)	debatable necessitude
-:				planned in Forth (hand-compiled)
-;				planned in Forth (hand-compiled)
+:				implemented in Forth
+;				implemented in Forth
 <				implemented in assembly
 <#			(???)	unplanned as of yet
 =				implemented in assembly
@@ -112,7 +112,7 @@ NEGATE				implemented in assembly
 OR				implemented in assembly
 OVER				implemented in assembly
 POSTPONE			planned in Forth
-QUIT				planned in Forth
+QUIT				implemented in Forth
 R>				implemented in assembly
 R@				implemented in assembly
 RECURSE				planned in Forth

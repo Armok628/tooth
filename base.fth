@@ -187,39 +187,6 @@ HEADER VARIABLE
 '	,		,
 '	EXIT		,
 
-HEADER IMMEDIATE
-	DOCOL		,
-'	LATEST		,
-'	@		,
-'	CELL		,
-'	+		,
-'	DUP		,
-'	C@		,
-'	F_IMM		,
-'	OR		,
-'	SWAP		,
-'	C!		,
-'	EXIT		,
-
-VARIABLE STATE
-
-HEADER [
-	DOCOL		,
-'	LITERAL		,
-	0		,
-'	STATE		,
-'	!		,
-'	EXIT		,
-IMMEDIATE
-
-HEADER ]
-	DOCOL		,
-'	LITERAL		,
-	1		,
-'	STATE		,
-'	!		,
-'	EXIT		,
-
 HEADER TYPE
 	DOCOL		,
 '	DUP		,

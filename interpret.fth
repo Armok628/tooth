@@ -1,3 +1,36 @@
+HEADER IMMEDIATE
+	DOCOL		,
+'	LATEST		,
+'	@		,
+'	CELL		,
+'	+		,
+'	DUP		,
+'	C@		,
+'	F_IMM		,
+'	OR		,
+'	SWAP		,
+'	C!		,
+'	EXIT		,
+
+VARIABLE STATE
+
+HEADER [
+	DOCOL		,
+'	LITERAL		,
+	0		,
+'	STATE		,
+'	!		,
+'	EXIT		,
+IMMEDIATE
+
+HEADER ]
+	DOCOL		,
+'	LITERAL		,
+	1		,
+'	STATE		,
+'	!		,
+'	EXIT		,
+
 HEADER INTERPRET
 	DOCOL		,
 
@@ -66,3 +99,17 @@ HEADER INTERPRET
 '	DROP		,
 '	DROP		,
 '	EXIT		,
+
+HEADER QUIT
+	DOCOL		,
+'	R0		,
+'	RP!		,
+'	INTERPRET	,
+'	BRANCH		,
+	-16		,
+
+QUIT
+
+HEADER : DOCOL , ] HEADER LITERAL [ DOCOL , ] , ] EXIT [
+
+: ; LITERAL EXIT , [ ' [ , ] EXIT [ IMMEDIATE
