@@ -25,7 +25,7 @@ This list is obviously subject to change.
 +LOOP				planned in Forth
 ,				implemented in Forth
 -				implemented in assembly
-.			(???)	planned in Forth
+.				implemented in Forth
 ."				planned in Forth
 /				planned in Forth
 /MOD				implemented in assembly
@@ -76,7 +76,7 @@ CONSTANT			implemented in Forth
 COUNT				planned in Forth
 CR				planned in Forth
 CREATE				implemented in Forth
-DECIMAL				planned in Forth
+DECIMAL				implemented in Forth
 DEPTH				planned in Forth ( : DEPTH S0 RSP@ - 3 RSHIFT ; )
 DO				planned in Forth
 DOES>				planned in Forth
@@ -130,7 +130,7 @@ STATE				planned in Forth (as variable)
 SWAP				implemented in assembly
 THEN				planned in Forth
 TYPE				planned in Forth
-U.			(???)	planned in Forth (same as .)
+U.				implemented in Forth
 U<				implemented in assembly
 UM*			(???)	debatable necessitude
 UM/MOD			(???)	debatable necessitude
@@ -170,7 +170,7 @@ ENDCASE				planned in Forth
 ENDOF				planned in Forth
 ERASE				planned in Forth
 FALSE				planned in Forth ( : FALSE 0 ; )
-HEX				planned in Forth
+HEX				implemented in Forth
 HOLDS			(???)	unplanned as of yet
 IS				planned in Forth
 MARKER				planned in Forth

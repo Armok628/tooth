@@ -69,7 +69,7 @@ KEY	R		C,
 '	!		,
 '	EXIT		,
 
-HEADER .
+HEADER U.
 	DOCOL		,
 '	LITERAL		,
 	-1		,
@@ -86,19 +86,64 @@ HEADER .
 
 '	DROP		,
 
+'	DUP		,
+'	LITERAL		,
+	10		,
+'	<		,
+'	0BRANCH		,
+	40		,
+
 '	LITERAL		,
 	KEY 0		,
+'	BRANCH		,
+	24		,
+
+'	LITERAL		,
+	KEY A 10 -	,
+
 '	+		,
 '	EMIT		,
-
 '	DUP		,
 '	LITERAL		,
 	-1		,
 '	=		,
 '	0BRANCH		,
-	-72		,
+	-152		,
+'	DROP		,
 
 '	EXIT		,
+
+HEADER HEX
+	DOCOL		,
+'	LITERAL		,
+	16		,
+'	BASE		,
+'	!		,
+'	EXIT		,
+
+HEADER DECIMAL
+	DOCOL		,
+'	LITERAL		,
+	10		,
+'	BASE		,
+'	!		,
+'	EXIT		,
+
+HEADER .
+	DOCOL		,
+'	DUP		,
+'	LITERAL		,
+	0		,
+'	<		,
+'	0BRANCH		,
+	40		,
+'	NEGATE		,
+'	LITERAL		,
+	KEY -		,
+'	EMIT		,
+'	U.		,
+'	EXIT		,
+
 
 HEADER CONSTANT
 	DOCOL		,
