@@ -95,7 +95,7 @@ HERE				implemented in assembly (as variable)
 HOLD			(???)	unplanned as of yet
 I				planned in Forth
 IF				planned in Forth
-IMMEDIATE			planned in Forth
+IMMEDIATE			implemented in Forth
 INVERT				implemented in assembly
 J				planned in Forth
 KEY				implemented in assembly
@@ -129,7 +129,7 @@ SPACES				planned in Forth
 STATE				planned in Forth (as variable)
 SWAP				implemented in assembly
 THEN				planned in Forth
-TYPE				planned in Forth
+TYPE				implemented in Forth
 U.				implemented in Forth
 U<				implemented in assembly
 UM*			(???)	debatable necessitude
@@ -140,10 +140,10 @@ VARIABLE			implemented in Forth
 WHILE				planned in Forth
 WORD				implemented in assembly
 XOR				implemented in assembly
-[				planned in Forth
+[				implemented in Forth
 [']				planned in Forth
 [CHAR]				planned in Forth
-]				planned in Forth
+]				implemented in Forth
 
 	Core extension words
 
@@ -200,7 +200,7 @@ WITHIN				planned in Forth
 	Additional words
 
 LATEST				implemented in assembly
-INTERPRET			planned in Forth (hand-compiled)
+INTERPRET			implemented in Forth
 SYSCALLn			implemented in assembly
 HEADER				implemented in Forth
 CONTINUE			planned in Forth

@@ -432,7 +432,7 @@ _WORD: ; => rsi=str, rdx=len
 	sub	rdx, rsi			; load length into rdx
 	ret
 
-ASMWORD TONUMBER, ">NUMBER" ; ( addr u -- n err )
+ASMWORD TONUMBER, ">NUMBER" ; ( addr u -- n str err )
 	pop	rcx				; get string length
 	pop	rsi				; get string address
 	pop	rax				; get total
@@ -589,7 +589,7 @@ last_link: dq PREVLINK
 
 	section .text
 
-DATA_SEG_SIZE equ 4096
+DATA_SEG_SIZE equ 1024*16
 
 init_data_seg:
 	xor	rdi, rdi
