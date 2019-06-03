@@ -69,6 +69,37 @@ KEY	R		C,
 '	!		,
 '	EXIT		,
 
+HEADER .
+	DOCOL		,
+'	LITERAL		,
+	-1		,
+'	SWAP		,
+
+'	BASE		,
+'	@		,
+'	/MOD		,
+'	DUP		,
+'	0BRANCH		,
+	24		,
+'	BRANCH		,
+	-56		,
+
+'	DROP		,
+
+'	LITERAL		,
+	KEY 0		,
+'	+		,
+'	EMIT		,
+
+'	DUP		,
+'	LITERAL		,
+	-1		,
+'	=		,
+'	0BRANCH		,
+	-72		,
+
+'	EXIT		,
+
 HEADER CONSTANT
 	DOCOL		,
 '	HEADER		,
