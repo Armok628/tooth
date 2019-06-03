@@ -147,7 +147,7 @@ ASMWORD UNROT, "-ROT" ; ( a b c -- c a b )
 	NEXT
 
 ASMWORD OVER, "OVER" ; ( a b -- a b a )
-	push	qword [rsp-8]
+	push	qword [rsp+8]
 	NEXT
 
 ASMWORD NIP, "NIP" ; ( a b -- b )
@@ -215,9 +215,10 @@ ASMWORD MUL, "*" ; ( a b -- a*b )
 	NEXT
 
 ASMWORD DIVMOD, "/MOD" ; ( a b -- a%b a/b )
-	mov	rax, [rsp-8]
+	mov	rax, [rsp+8]
+	xor	rdx, rdx
 	div	qword [rsp]
-	mov	qword [rsp-8], rdx
+	mov	qword [rsp+8], rdx
 	mov	qword [rsp], rax
 	NEXT
 
