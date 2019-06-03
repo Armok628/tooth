@@ -102,11 +102,6 @@ ASMWORD	LITERAL, "LITERAL"
 	add	rbx, 8
 	NEXT
 
-ASMWORD	BYE, "BYE"
-	mov	rax, SYS_EXIT
-	xor	rdi, rdi
-	syscall
-
 ASMWORD EXECUTE, "EXECUTE"
 	pop	rax
 	jmp	[rax]
@@ -402,11 +397,15 @@ _KEY: ; => al=key
 	syscall					; read(0,termbuf,BUFSIZE)
 	pop	rdi				; restore rdi
 	test	rax, rax			; check for any bytes read
-	jz	BYE_ASM 			; if none, exit
+	jz	.exit	 			; if none, exit
 	mov	qword [keycount], rax		; else set keycount
 	mov	qword [nextkey], 1		; reset next key index
 	movzx	eax, byte [termbuf]		; load first key
 	ret					; return key in rax
+.exit:
+	mov	rax, SYS_EXIT
+	xor	rdi, rdi
+	syscall
 
 ASMWORD WORD, "WORD", F_IMM ; ( -- addr u )
 	call	_WORD
