@@ -190,6 +190,7 @@ HEADER VARIABLE
 HEADER IMMEDIATE
 	DOCOL		,
 '	LATEST		,
+'	@		,
 '	CELL		,
 '	+		,
 '	DUP		,
