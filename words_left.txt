@@ -82,7 +82,7 @@ DO				planned in Forth
 DOES>				planned in Forth
 DROP				implemented in assembly
 DUP				implemented in assembly
-ELSE				planned in Forth
+ELSE				implemented in Forth
 EMIT				implemented in assembly
 ENVIRONMENT?		(???)	debatable necessitude
 EVALUATE			implemented in assembly (possible in Forth with more variables)
@@ -94,7 +94,7 @@ FM/MOD			(???)	debatable necessitude
 HERE				implemented in assembly (as variable)
 HOLD			(???)	unplanned as of yet
 I				planned in Forth
-IF				planned in Forth
+IF				implemented in Forth
 IMMEDIATE			implemented in Forth
 INVERT				implemented in assembly
 J				planned in Forth
@@ -128,7 +128,7 @@ SPACE				planned in Forth
 SPACES				planned in Forth
 STATE				planned in Forth (as variable)
 SWAP				implemented in assembly
-THEN				planned in Forth
+THEN				implemented in Forth
 TYPE				implemented in Forth
 U.				implemented in Forth
 U<				implemented in assembly

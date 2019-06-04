@@ -42,7 +42,7 @@ $%1:
 %endmacro
 
 %macro FORTHCONST 3
-ASMWORD %1, %2, F_IMM
+ASMWORD %1, %2
 	push	qword %3
 	NEXT
 %endmacro
