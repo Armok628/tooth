@@ -6,7 +6,7 @@ KEY	,		HERE C! 1 ALLOT
 	DOCOL		HERE ! 8 ALLOT
 '	HERE		HERE ! 8 ALLOT
 '	!		HERE ! 8 ALLOT
-'	LITERAL		HERE ! 8 ALLOT
+'	LIT		HERE ! 8 ALLOT
 	8		HERE ! 8 ALLOT
 '	ALLOT		HERE ! 8 ALLOT
 '	EXIT		HERE ! 8 ALLOT
@@ -20,7 +20,7 @@ KEY	,		HERE C! 1 ALLOT
 	DOCOL		,
 '	HERE		,
 '	C!		,
-'	LITERAL		,
+'	LIT		,
 	1		,
 '	ALLOT		,
 '	EXIT		,
@@ -62,7 +62,7 @@ KEY	R		C,
 
 '	DROP		,
 '	DROP		,
-'	LITERAL		,
+'	LIT		,
 	0		,
 '	C,		,
 
@@ -71,7 +71,7 @@ KEY	R		C,
 
 HEADER U.
 	DOCOL		,
-'	LITERAL		,
+'	LIT		,
 	-1		,
 '	SWAP		,
 
@@ -87,24 +87,24 @@ HEADER U.
 '	DROP		,
 
 '	DUP		,
-'	LITERAL		,
+'	LIT		,
 	10		,
 '	<		,
 '	0BRANCH		,
 	40		,
 
-'	LITERAL		,
+'	LIT		,
 	KEY 0		,
 '	BRANCH		,
 	24		,
 
-'	LITERAL		,
+'	LIT		,
 	KEY A 10 -	,
 
 '	+		,
 '	EMIT		,
 '	DUP		,
-'	LITERAL		,
+'	LIT		,
 	-1		,
 '	=		,
 '	0BRANCH		,
@@ -115,7 +115,7 @@ HEADER U.
 
 HEADER HEX
 	DOCOL		,
-'	LITERAL		,
+'	LIT		,
 	16		,
 '	BASE		,
 '	!		,
@@ -123,7 +123,7 @@ HEADER HEX
 
 HEADER DECIMAL
 	DOCOL		,
-'	LITERAL		,
+'	LIT		,
 	10		,
 '	BASE		,
 '	!		,
@@ -132,13 +132,13 @@ HEADER DECIMAL
 HEADER .
 	DOCOL		,
 '	DUP		,
-'	LITERAL		,
+'	LIT		,
 	0		,
 '	<		,
 '	0BRANCH		,
 	40		,
 '	NEGATE		,
-'	LITERAL		,
+'	LIT		,
 	KEY -		,
 '	EMIT		,
 '	U.		,
@@ -148,14 +148,14 @@ HEADER .
 HEADER CONSTANT
 	DOCOL		,
 '	HEADER		,
-'	LITERAL		,
+'	LIT		,
 	DOCOL		,
 '	,		,
-'	LITERAL		,
-	' LITERAL	,
+'	LIT		,
+	' LIT	,
 '	,		,
 '	,		,
-'	LITERAL		,
+'	LIT		,
 	' EXIT		,
 '	,		,
 '	EXIT		,
@@ -163,18 +163,18 @@ HEADER CONSTANT
 HEADER CREATE
 	DOCOL		,
 '	HEADER		,
-'	LITERAL		,
+'	LIT		,
 	DOCOL		,
 '	,		,
-'	LITERAL		,
-	' LITERAL	,
+'	LIT		,
+	' LIT	,
 '	,		,
 '	HERE		,
-'	LITERAL		,
+'	LIT		,
 	16		,
 '	+		,
 '	,		,
-'	LITERAL		,
+'	LIT		,
 	' EXIT		,
 '	,		,
 '	EXIT		,
@@ -182,7 +182,7 @@ HEADER CREATE
 HEADER VARIABLE
 	DOCOL		,
 '	CREATE		,
-'	LITERAL		,
+'	LIT		,
 	0		,
 '	,		,
 '	EXIT		,
@@ -204,3 +204,129 @@ HEADER TYPE
 '	DROP		,
 '	DROP		,
 '	EXIT		,
+
+HEADER IMMEDIATE
+	DOCOL		,
+'	LATEST		,
+'	@		,
+'	CELL		,
+'	+		,
+'	DUP		,
+'	C@		,
+'	F_IMM		,
+'	OR		,
+'	SWAP		,
+'	C!		,
+'	EXIT		,
+
+VARIABLE STATE
+
+HEADER [
+	DOCOL		,
+'	LIT		,
+	0		,
+'	STATE		,
+'	!		,
+'	EXIT		,
+IMMEDIATE
+
+HEADER ]
+	DOCOL		,
+'	LIT		,
+	1		,
+'	STATE		,
+'	!		,
+'	EXIT		,
+
+HEADER INTERPRET
+	DOCOL		,
+
+'	WORD		,
+'	FIND		,
+'	STATE		,
+'	@		,
+'	0BRANCH		,
+	272		,
+
+'	DUP		,
+'	0BRANCH		,
+	80		,
+
+'	LIT		,
+	-1		,
+'	=		,
+'	0BRANCH		,
+	24		,
+'	,		,
+'	EXIT		,
+
+'	EXECUTE		,
+'	EXIT		,
+
+'	DROP		,
+'	LIT		,
+	0		,
+'	-ROT		,
+'	>NUMBER		,
+'	DUP		,
+'	0BRANCH		,
+	56		,
+'	TYPE		,
+'	LIT		,
+	KEY ?		,
+'	EMIT		,
+'	DROP		,
+'	EXIT		,
+'	DROP		,
+'	DROP		,
+'	LIT		,
+	' LIT	,
+'	,		,
+'	,		,
+'	EXIT		,
+
+'	0BRANCH		,
+	24		,
+'	EXECUTE		,
+'	EXIT		,
+
+'	LIT		,
+	0		,
+'	-ROT		,
+'	>NUMBER		,
+'	DUP		,
+'	0BRANCH		,
+	56		,
+'	TYPE		,
+'	LIT		,
+	KEY ?		,
+'	EMIT		,
+'	DROP		,
+'	EXIT		,
+'	DROP		,
+'	DROP		,
+'	EXIT		,
+
+HEADER QUIT
+	DOCOL		,
+'	R0		,
+'	RP!		,
+'	INTERPRET	,
+'	BRANCH		,
+	-16		,
+
+QUIT
+
+HEADER : DOCOL , ] HEADER LIT [ DOCOL , ] , ] EXIT [
+
+: ; LIT EXIT , [ ' [ , ] EXIT [ IMMEDIATE
+
+: POSTPONE ' , ; IMMEDIATE
+
+: LITERAL LIT LIT , , ; IMMEDIATE
+
+: ['] ' POSTPONE LITERAL ; IMMEDIATE
+
+: COMPILE, , ; IMMEDIATE
+
+: [CHAR] KEY POSTPONE LITERAL ; IMMEDIATE
