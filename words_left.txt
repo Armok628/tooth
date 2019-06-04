@@ -62,7 +62,7 @@ ALIGNED				planned in Forth ( : ALIGNED 1- 7 INVERT AND 8 + ; )
 ALLOT				implemented in assembly
 AND				implemented in assembly
 BASE				implemented in assembly (variable)
-BEGIN			(???)	debatable necessitude
+BEGIN				implemented in Forth
 BL				implemented in assembly (constant)
 C!				implemented in assembly
 C,				implemented in Forth
@@ -135,9 +135,9 @@ U<				implemented in assembly
 UM*			(???)	debatable necessitude
 UM/MOD			(???)	debatable necessitude
 UNLOOP				planned in Forth
-UNTIL				planned in Forth
+UNTIL				implemented in Forth
 VARIABLE			implemented in Forth
-WHILE				planned in Forth
+WHILE				implemented in Forth
 WORD				implemented in assembly
 XOR				implemented in assembly
 [				implemented in Forth
@@ -158,7 +158,7 @@ XOR				implemented in assembly
 <>				implemented in assembly
 ?DO			(???)	planned in Forth
 ACTION-OF		(???)	planned in Forth
-AGAIN			(???)	planned in Forth
+AGAIN				implemented in Forth
 BUFFER:				planned in Forth
 C"				planned in Forth
 CASE				planned in Forth
@@ -195,7 +195,7 @@ UNUSED				planned in Forth ( : UNUSED HERE SYS_BRK 0 SYSCALL1 - 3 RSHIFT ; )
 VALUE				planned in Forth
 WITHIN				planned in Forth
 [COMPILE]			planned in Forth
-\				planned in Forth
+\				implemented in Forth
 
 	Additional words
 
