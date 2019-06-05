@@ -144,49 +144,6 @@ HEADER .
 '	U.		,
 '	EXIT		,
 
-
-HEADER CONSTANT
-	DOCOL		,
-'	HEADER		,
-'	LIT		,
-	DOCOL		,
-'	,		,
-'	LIT		,
-	' LIT	,
-'	,		,
-'	,		,
-'	LIT		,
-	' EXIT		,
-'	,		,
-'	EXIT		,
-
-HEADER CREATE
-	DOCOL		,
-'	HEADER		,
-'	LIT		,
-	DOCOL		,
-'	,		,
-'	LIT		,
-	' LIT	,
-'	,		,
-'	HERE		,
-'	LIT		,
-	16		,
-'	+		,
-'	,		,
-'	LIT		,
-	' EXIT		,
-'	,		,
-'	EXIT		,
-
-HEADER VARIABLE
-	DOCOL		,
-'	CREATE		,
-'	LIT		,
-	0		,
-'	,		,
-'	EXIT		,
-
 HEADER TYPE
 	DOCOL		,
 '	DUP		,
@@ -219,7 +176,12 @@ HEADER IMMEDIATE
 '	C!		,
 '	EXIT		,
 
-VARIABLE STATE
+HEADER STATE
+	DOCOL		,
+'	LIT		,
+HERE CELL DUP + +	,
+'	EXIT		,
+	0		,
 
 HEADER [
 	DOCOL		,
@@ -330,6 +292,20 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : ['] ' POSTPONE LITERAL ; IMMEDIATE
 
 : [CHAR] KEY POSTPONE LITERAL ; IMMEDIATE
+
+: CONSTANT
+	HEADER DOCOL ,
+	POSTPONE LITERAL
+	['] EXIT ,
+;
+
+: CREATE
+	HEADER DOCOL ,
+	HERE CELL 3 * + POSTPONE LITERAL
+	['] EXIT ,
+;
+
+: VARIABLE CREATE CELL ALLOT ;
 
 : CR 10 EMIT ;
 
