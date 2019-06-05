@@ -22,7 +22,7 @@ This list is obviously subject to change.
 */MOD				planned in Forth
 +				implemented in assembly
 +!				planned in Forth
-+LOOP				planned in Forth
++LOOP				implemented in Forth
 ,				implemented in Forth
 -				implemented in assembly
 .				implemented in Forth
@@ -78,7 +78,7 @@ CR				planned in Forth
 CREATE				implemented in Forth
 DECIMAL				implemented in Forth
 DEPTH				planned in Forth ( : DEPTH S0 RSP@ - 3 RSHIFT ; )
-DO				planned in Forth
+DO				implemented in Forth
 DOES>				planned in Forth
 DROP				implemented in assembly
 DUP				implemented in assembly
@@ -101,7 +101,7 @@ J				planned in Forth
 KEY				implemented in assembly
 LEAVE				planned in Forth
 LITERAL				implemented in assembly
-LOOP				planned in Forth
+LOOP				implemented in Forth
 LSHIFT				implemented in assembly
 M*			(???)	debatable necessitude
 MAX				planned in Forth
@@ -134,7 +134,7 @@ U.				implemented in Forth
 U<				implemented in assembly
 UM*			(???)	debatable necessitude
 UM/MOD			(???)	debatable necessitude
-UNLOOP				planned in Forth
+UNLOOP				implemented in Forth
 UNTIL				implemented in Forth
 VARIABLE			implemented in Forth
 WHILE				implemented in Forth

@@ -401,7 +401,7 @@ _KEY: ; => al=key
 	xor	rdi, rdi
 	syscall
 
-ASMWORD WORD, "WORD", F_IMM ; ( -- addr u )
+ASMWORD WORD, "WORD" ; ( -- addr u )
 	call	_WORD
 	push	rsi
 	push	rdx

@@ -6,3 +6,7 @@
 
 \ 0 EXECUTE (comment test)
 : test_begin_again 0 BEGIN DUP . CR 1+ AGAIN ;
+
+: test_do_loop 0 DO R@ . CR LOOP ;
+
+: test_do_+loop 0 DO R@ . CR 2 +LOOP ;

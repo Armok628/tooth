@@ -347,3 +347,37 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : REPEAT ['] BRANCH , SWAP HERE - , POSTPONE THEN ; IMMEDIATE
 
 : \ BEGIN KEY 10 = UNTIL ;
+
+\ 10 0 DO ... LOOP -> 10 0 SWAP >R >R BEGIN ... R> 1+ R@ OVER >R >= UNTIL R> R> DROP DROP ;
+
+: DO
+	['] SWAP ,
+	['] >R DUP , ,
+	POSTPONE BEGIN
+; IMMEDIATE
+
+: UNLOOP
+	['] R> DUP , ,
+	['] DROP DUP , ,
+; IMMEDIATE
+
+: +LOOP
+	['] R> ,
+	['] + ,
+	['] R@ ,
+	['] OVER ,
+	['] >R ,
+	['] >= ,
+	POSTPONE UNTIL
+	POSTPONE UNLOOP
+; IMMEDIATE
+
+: LOOP
+	1 POSTPONE LITERAL
+	POSTPONE +LOOP
+; IMMEDIATE
+
+: I R@ ;
+: I' RP@ CELL + ! ;
+: J RP@ CELL DUP + + ! ;
+: J' RP@ CELL 3 * + ! ;
