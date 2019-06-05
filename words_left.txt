@@ -16,7 +16,7 @@ This list is obviously subject to change.
 #>			(???)	unplanned as of yet
 #S			(???)	unplanned as of yet
 '				implemented in assembly
-(				planned in Forth
+(				implemented in Forth
 *				implemented in assembly
 */				planned in Forth
 */MOD				planned in Forth
@@ -48,7 +48,7 @@ This list is obviously subject to change.
 =				implemented in assembly
 >				implemented in assembly
 >BODY				planned in Forth
->IN				implemented in assembly (as constant)
+>IN				implemented in assembly
 >NUMBER				implemented in assembly
 >R				implemented in assembly
 ?DUP				planned in Forth
@@ -61,9 +61,9 @@ ALIGN				planned in Forth ( : HERE DUP ALIGNED - ALLOT ; )
 ALIGNED				planned in Forth ( : ALIGNED 1- 7 INVERT AND 8 + ; )
 ALLOT				implemented in assembly
 AND				implemented in assembly
-BASE				implemented in assembly (variable)
+BASE				implemented in assembly
 BEGIN				implemented in Forth
-BL				implemented in assembly (constant)
+BL				implemented in Forth
 C!				implemented in assembly
 C,				implemented in Forth
 C@				implemented in assembly
@@ -79,7 +79,7 @@ CREATE				implemented in Forth
 DECIMAL				implemented in Forth
 DEPTH				planned in Forth ( : DEPTH S0 RSP@ - 3 RSHIFT ; )
 DO				implemented in Forth
-DOES>				planned in Forth
+DOES>				implemented in Forth
 DROP				implemented in assembly
 DUP				implemented in assembly
 ELSE				implemented in Forth
@@ -91,7 +91,7 @@ EXIT				implemented in assembly
 FILL			(???)	planned in Forth (better as `rep stosb`?)
 FIND				implemented in assembly
 FM/MOD			(???)	debatable necessitude
-HERE				implemented in assembly (as variable)
+HERE				implemented in assembly
 HOLD			(???)	unplanned as of yet
 I				planned in Forth
 IF				implemented in Forth
@@ -126,7 +126,7 @@ SM/REM			(???)	debatable necessitude
 SOURCE				implemented in assembly
 SPACE				planned in Forth
 SPACES				planned in Forth
-STATE				planned in Forth (as variable)
+STATE				implemented in Forth
 SWAP				implemented in assembly
 THEN				implemented in Forth
 TYPE				implemented in Forth
