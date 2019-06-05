@@ -49,7 +49,7 @@ KEY	R		C,
 
 '	DUP		,
 '	0BRANCH		,
-	80		,
+	10 CELL *	,
 '	SWAP		,
 '	DUP		,
 '	C@		,
@@ -58,7 +58,7 @@ KEY	R		C,
 '	SWAP		,
 '	1-		,
 '	BRANCH		,
-	-88		,
+	-11 CELL *	,
 
 '	DROP		,
 '	DROP		,
@@ -67,88 +67,13 @@ KEY	R		C,
 '	C,		,
 
 '	!		,
-'	EXIT		,
-
-HEADER U.
-	DOCOL		,
-'	LIT		,
-	-1		,
-'	SWAP		,
-
-'	BASE		,
-'	@		,
-'	/MOD		,
-'	DUP		,
-'	0BRANCH		,
-	24		,
-'	BRANCH		,
-	-56		,
-
-'	DROP		,
-
-'	DUP		,
-'	LIT		,
-	10		,
-'	<		,
-'	0BRANCH		,
-	40		,
-
-'	LIT		,
-	KEY 0		,
-'	BRANCH		,
-	24		,
-
-'	LIT		,
-	KEY A 10 -	,
-
-'	+		,
-'	EMIT		,
-'	DUP		,
-'	LIT		,
-	-1		,
-'	=		,
-'	0BRANCH		,
-	-152		,
-'	DROP		,
-
-'	EXIT		,
-
-HEADER HEX
-	DOCOL		,
-'	LIT		,
-	16		,
-'	BASE		,
-'	!		,
-'	EXIT		,
-
-HEADER DECIMAL
-	DOCOL		,
-'	LIT		,
-	10		,
-'	BASE		,
-'	!		,
-'	EXIT		,
-
-HEADER .
-	DOCOL		,
-'	DUP		,
-'	LIT		,
-	0		,
-'	<		,
-'	0BRANCH		,
-	40		,
-'	NEGATE		,
-'	LIT		,
-	KEY -		,
-'	EMIT		,
-'	U.		,
 '	EXIT		,
 
 HEADER TYPE
 	DOCOL		,
 '	DUP		,
 '	0BRANCH		,
-	80		,
+	10 CELL *	,
 '	SWAP		,
 '	DUP		,
 '	C@		,
@@ -157,7 +82,7 @@ HEADER TYPE
 '	SWAP		,
 '	1-		,
 '	BRANCH		,
-	-88		,
+	-11 CELL *	,
 '	DROP		,
 '	DROP		,
 '	EXIT		,
@@ -208,17 +133,17 @@ HEADER INTERPRET
 '	STATE		,
 '	@		,
 '	0BRANCH		,
-	272		,
+	34 CELL *	,
 
 '	DUP		,
 '	0BRANCH		,
-	80		,
+	10 CELL *	,
 
 '	LIT		,
 	-1		,
 '	=		,
 '	0BRANCH		,
-	24		,
+	3 CELL *	,
 '	,		,
 '	EXIT		,
 
@@ -232,7 +157,7 @@ HEADER INTERPRET
 '	>NUMBER		,
 '	DUP		,
 '	0BRANCH		,
-	56		,
+	7 CELL *	,
 '	TYPE		,
 '	LIT		,
 	KEY ?		,
@@ -248,7 +173,7 @@ HEADER INTERPRET
 '	EXIT		,
 
 '	0BRANCH		,
-	24		,
+	3 CELL *	,
 '	EXECUTE		,
 '	EXIT		,
 
@@ -258,7 +183,7 @@ HEADER INTERPRET
 '	>NUMBER		,
 '	DUP		,
 '	0BRANCH		,
-	56		,
+	7 CELL *	,
 '	TYPE		,
 '	LIT		,
 	KEY ?		,
@@ -275,7 +200,7 @@ HEADER QUIT
 '	RP!		,
 '	INTERPRET	,
 '	BRANCH		,
-	-16		,
+	-2 CELL *	,
 
 QUIT
 
@@ -322,7 +247,30 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : WHILE POSTPONE IF ; IMMEDIATE
 : REPEAT ['] BRANCH , SWAP HERE - , POSTPONE THEN ; IMMEDIATE
 
-: \ BEGIN KEY 10 = UNTIL ;
+: \ BEGIN KEY 10 = UNTIL ; IMMEDIATE
+
+: DECIMAL 10 BASE ! ;
+: HEX 16 BASE ! ;
+: BINARY 2 BASE ! ;
+
+: U.
+	-1 SWAP
+	BEGIN
+		BASE @ /MOD
+	DUP 0 = UNTIL
+	DROP
+	BEGIN
+		DUP 10 < IF
+			[CHAR] 0 +
+		ELSE
+			[ KEY A 10 - LITERAL ] +
+		THEN
+		EMIT
+	DUP -1 = UNTIL
+	DROP
+;
+
+: . DUP 0 < IF NEGATE [CHAR] - EMIT THEN U. ;
 
 \ 10 0 DO ... LOOP -> 10 0 SWAP >R >R BEGIN ... R> 1+ R@ OVER >R >= UNTIL R> R> DROP DROP ;
 
