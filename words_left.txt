@@ -53,7 +53,7 @@ This list is obviously subject to change.
 >R				implemented in assembly
 ?DUP				planned in Forth
 @				implemented in assembly
-ABORT				planned in Forth ( : ABORT S0 RSP! QUIT ; )
+ABORT				implemented in Forth
 ABORT"				planned in Forth
 ABS				planned in Forth ( : ABS DUP IF NEGATE THEN ; )
 ACCEPT				planned in Forth
@@ -205,3 +205,4 @@ SYSCALLn			implemented in assembly
 HEADER				implemented in Forth
 CONTINUE			planned in Forth
 BREAK				planned in Forth
+CLEAR				implemented in Forth

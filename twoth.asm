@@ -1,6 +1,6 @@
 ;;;;;;; Macros ;;;;;;;
 
-%macro NEXT 0
+%macro NEXT 0 ; rbx: pointer to address of next procedure in array
 	mov	rax, [rbx]
 	add	rbx, 8
 	jmp	[rax]
@@ -18,39 +18,33 @@
 
 %define PREVLINK 0
 
-%macro DICTLINK 2-3 0
+%macro DICTLINK 2-3 0			; to make a new dictionary definition:
 	section	.rodata
 %1_LINK:
-	dq	$%[PREVLINK]
-	%define PREVLINK %1_LINK
+	dq	$%[PREVLINK]		; compile link to previous link
+	%define PREVLINK %1_LINK	; set next previous link to here
 	%strlen l %2
-	db	%3|%[l],%2,0
+	db	%3|%[l],%2,0		; compile bytes: flags|len, string, 0
 	%undef l
 %endmacro
 
 %macro ASMWORD 2-3 0
-	DICTLINK %1, %2, %3
+	DICTLINK %1, %2, %3		; make a dictionary definition
 $%1:
-	dq	%1_ASM
+	dq	%1_ASM			; set xt address to assembly
 	section	.text
-%1_ASM:
+%1_ASM:					; define assembly after here
 %endmacro
 
 %macro FORTHWORD 2-3+ 0
-	DICTLINK %1, %2, %3
-$%1:
+	DICTLINK %1, %2, %3		; make a dictionary definition
+$%1:					; define Forth word here (with dq)
 %endmacro
 
 %macro FORTHCONST 3
-ASMWORD %1, %2
-	push	qword %3
+ASMWORD %1, %2				; define a new assembly word
+	push	qword %3		; push the given argument
 	NEXT
-%endmacro
-
-%macro FORTHVAR 2-3 0
-	section .data
-%1_VAR: dq	%3
-	FORTHCONST %1, %2, %1_VAR
 %endmacro
 
 ;;;;;;; Assembler constants ;;;;;;;
@@ -364,12 +358,12 @@ base: dq 10 ; fetch address with BASE
 
 	section .text
 
-ASMWORD SOURCE, "SOURCE"
+ASMWORD SOURCE, "SOURCE" ; ( -- addr u )
 	push	qword [inputbuf]
 	push	qword [keycount]
 	NEXT
 
-ASMWORD EVALUATE, "EVALUATE"
+ASMWORD EVALUATE, "EVALUATE" ; ( addr u -- )
 	pop	qword [keycount]
 	pop	qword [inputbuf]
 	NEXT
@@ -591,17 +585,20 @@ last_link: dq PREVLINK
 
 DATA_SEG_SIZE equ 1024*16
 
-init_data_seg:
+init_data_seg: ; here=brk(0); brk(here+DATA_SEG_SIZE);
 	xor	rdi, rdi
 	mov	rax, SYS_BRK
 	syscall
 	mov	qword [here], rax
 	lea	rdi, [rax+DATA_SEG_SIZE]
 	mov	rax, SYS_BRK
-	syscall
+	syscall	
 	ret
 
 ;;;;;;; Base interpreter code ;;;;;;;
+
+; effectively:
+; BEGIN WORD FIND IF EXECUTE ELSE >NUMBER IF DROP DROP [CHAR] ? EMIT ELSE DROP THEN THEN AGAIN
 
 FORTHWORD baseinterp, ""
 	dq	DOCOL, $WORD, FIND, ZBRANCH, 32, EXECUTE, BRANCH, -48, \
