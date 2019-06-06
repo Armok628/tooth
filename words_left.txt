@@ -156,7 +156,7 @@ XOR				implemented in assembly
 2R@			(???)	debatable necessitude
 :NONAME				planned in Forth
 <>				implemented in assembly
-?DO			(???)	planned in Forth
+?DO				implemented in Forth
 ACTION-OF		(???)	planned in Forth
 AGAIN				implemented in Forth
 BUFFER:				planned in Forth
