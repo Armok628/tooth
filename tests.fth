@@ -9,6 +9,6 @@
 
 : test_do_loop 0 DO I . CR LOOP ;
 
-: test_do_+loop 0 DO I . CR 2 +LOOP ;
+: test_do_+loop -ROT DO I . CR DUP +LOOP ;
 
 : test_?do_loop ?DO I . CR LOOP ;

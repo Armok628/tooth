@@ -290,8 +290,33 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 	['] DROP DUP , ,
 ; IMMEDIATE
 : +LOOP
+	['] DUP ,
 	['] R> ,
 	['] + ,
+	['] R@ ,
+	['] OVER ,
+	['] >R ,
+	['] ROT ,
+	0 POSTPONE LITERAL
+	['] < ,
+	POSTPONE IF
+		['] < ,
+	POSTPONE ELSE
+		['] > ,
+	POSTPONE THEN
+	POSTPONE UNTIL
+	POSTPONE UNLOOP
+	DUP IF
+		POSTPONE ELSE
+		['] DROP DUP , ,
+		POSTPONE THEN
+	ELSE
+		DROP
+	THEN
+; IMMEDIATE
+: LOOP
+	['] R> ,
+	['] 1+ ,
 	['] R@ ,
 	['] OVER ,
 	['] >R ,
@@ -305,10 +330,6 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 	ELSE
 		DROP
 	THEN
-; IMMEDIATE
-: LOOP
-	1 POSTPONE LITERAL
-	POSTPONE +LOOP
 ; IMMEDIATE
 
 : I RP@ CELL - @ ;
