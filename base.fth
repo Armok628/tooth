@@ -218,11 +218,11 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 
 : CREATE HEADER
 	DOCOL ,
-	HERE CELL 4 * + POSTPONE LITERAL
+	HERE 4 CELL * + POSTPONE LITERAL
 	['] EXIT ,
 	CELL ALLOT
 ;
-: DOES> LATEST @ CELL + DUP C@ + [ 2 CELL 3 * + ] LITERAL +
+: DOES> LATEST @ CELL + DUP C@ + [ 3 CELL * 2 + ] LITERAL +
 	['] BRANCH OVER ! CELL +
 	R> OVER - SWAP !
 ;
@@ -268,7 +268,6 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 	DUP -1 = UNTIL
 	DROP
 ;
-
 : . DUP 0 < IF NEGATE [CHAR] - EMIT THEN U. ;
 
 \ 10 0 DO ... LOOP -> 10 0 SWAP >R >R BEGIN ... R> 1+ R@ OVER >R >= UNTIL R> R> DROP DROP ;
@@ -276,14 +275,20 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : DO
 	['] SWAP ,
 	['] >R DUP , ,
+	0
 	POSTPONE BEGIN
 ; IMMEDIATE
-
+: ?DO
+	['] OVER DUP , ,
+	['] <> ,
+	POSTPONE IF
+	POSTPONE DO
+	SWAP DROP
+; IMMEDIATE
 : UNLOOP
 	['] R> DUP , ,
 	['] DROP DUP , ,
 ; IMMEDIATE
-
 : +LOOP
 	['] R> ,
 	['] + ,
@@ -293,14 +298,20 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 	['] >= ,
 	POSTPONE UNTIL
 	POSTPONE UNLOOP
+	DUP IF
+		POSTPONE ELSE
+		['] DROP DUP , ,
+		POSTPONE THEN
+	ELSE
+		DROP
+	THEN
 ; IMMEDIATE
-
 : LOOP
 	1 POSTPONE LITERAL
 	POSTPONE +LOOP
 ; IMMEDIATE
 
-: I R@ ;
-: I' RP@ CELL + ! ;
-: J RP@ CELL DUP + + ! ;
-: J' RP@ CELL 3 * + ! ;
+: I RP@ CELL - @ ;
+: I' RP@ 2 CELL * - @ ;
+: J RP@ 3 CELL * - @ ;
+: J' RP@ 4 CELL * - @ ;

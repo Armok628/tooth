@@ -7,6 +7,8 @@
 \ 0 EXECUTE (comment test)
 : test_begin_again 0 BEGIN DUP . CR 1+ AGAIN ;
 
-: test_do_loop 0 DO R@ . CR LOOP ;
+: test_do_loop 0 DO I . CR LOOP ;
 
-: test_do_+loop 0 DO R@ . CR 2 +LOOP ;
+: test_do_+loop 0 DO I . CR 2 +LOOP ;
+
+: test_?do_loop ?DO I . CR LOOP ;
