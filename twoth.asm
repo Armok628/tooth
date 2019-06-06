@@ -583,7 +583,7 @@ last_link: dq PREVLINK
 
 	section .text
 
-DATA_SEG_SIZE equ 1024*16
+DATA_SEG_SIZE equ 1024*64
 
 init_data_seg: ; here=brk(0); brk(here+DATA_SEG_SIZE);
 	xor	rdi, rdi
@@ -601,12 +601,14 @@ init_data_seg: ; here=brk(0); brk(here+DATA_SEG_SIZE);
 ; BEGIN WORD FIND IF EXECUTE ELSE >NUMBER IF DROP DROP [CHAR] ? EMIT ELSE DROP THEN THEN AGAIN
 
 FORTHWORD baseinterp, ""
-	dq	DOCOL, $WORD, FIND, ZBRANCH, 32, EXECUTE, BRANCH, -48, \
-			LIT, 0, UNROT, TONUMBER, ZBRANCH, 24, BRANCH, 32, \
-			DROP, BRANCH, -136, \
-			DROP, DROP, LIT, '?', EMIT, BRANCH, -192
+	dq	DOCOL, $WORD, FIND, ZBRANCH, 4*8, EXECUTE, BRANCH, -6*8, \
+			LIT, 0, UNROT, TONUMBER, ZBRANCH, 3*8, BRANCH, 4*8, \
+			DROP, BRANCH, -17*8, \
+			DROP, DROP, LIT, '?', EMIT, BRANCH, -24*8
 
 ;;;;;;; Executable entry point ;;;;;;;
+
+	section .text
 
 	global _start
 _start:
