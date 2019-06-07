@@ -73,11 +73,11 @@ CHAR				implemented in Forth
 CHAR+				implemented in Forth
 CHARS				implemented in Forth
 CONSTANT			implemented in Forth
-COUNT			(???)	planned in Forth
+COUNT				implemented in assembly
 CR				implemented in Forth
 CREATE				implemented in Forth
 DECIMAL				implemented in Forth
-DEPTH				planned in Forth ( : DEPTH S0 RSP@ - 3 RSHIFT ; )
+DEPTH				implemented in Forth
 DO				implemented in Forth
 DOES>				implemented in Forth
 DROP				implemented in assembly

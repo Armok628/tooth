@@ -417,10 +417,9 @@ _KEY: ; => al=key
 ASMWORD WORD, "WORD" ; ( -- addr u )
 	call	_WORD
 	push	rsi
-	push	rdx
 	NEXT
-_WORD: ; => rsi=str, rdx=len
-	mov	rdi, wordbuf
+_WORD: ; => rsi=ctstr
+	mov	rdi, wordbuf+1
 .start:
 	call	_KEY 				; get a key in al
 	cmp	al, byte ' '
@@ -434,10 +433,12 @@ _WORD: ; => rsi=str, rdx=len
 .end:
 	mov	rsi, wordbuf			; load string address into rsi
 	mov	rdx, rdi
-	sub	rdx, rsi			; load length into rdx
+	sub	rdx, rsi
+	dec	rdx				; calculate length into rdx
+	mov	byte [rsi], dl			; put length in counted string
 	ret
 
-ASMWORD TONUMBER, ">NUMBER" ; ( addr u -- n str err )
+ASMWORD TONUMBER, ">NUMBER" ; ( n str u -- n str err )
 	pop	rcx				; get string length
 	pop	rsi				; get string address
 	pop	rax				; get total
@@ -481,22 +482,21 @@ ASMWORD TONUMBER, ">NUMBER" ; ( addr u -- n str err )
 
 ;;;;;;; "Finding" words ;;;;;;;
 
-ASMWORD FIND, "FIND" ; ( addr u -- xt -1 | xt 1 | addr u 0 )
-	pop	rdx				; get string length
-	pop	rsi				; get string address
+ASMWORD FIND, "FIND" ; ( ctstr -- ctstr 0 | xt +/-1 )
+	mov	rsi, qword [rsp]		; get counted string
 	call	_FIND				; load entry into rax
 	test	rcx, rcx			; test error
 	jz	.notfound			; if no error:
 	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
-	push	rax				; push xt
-	push	rcx				; push error
+	mov	qword [rsp], rax		; replace counted string with xt
+	push	rcx				; push find code (+/-1)
 	NEXT
 .notfound:					; else:
-	push	rsi				; put string address back
-	push	rdx				; put string length back
-	push	rcx				; leave error code on stack
+	push	rcx				; push find code (0)
 	NEXT
-_FIND: ; rsi=str, rdx=len => rsi=str, rdx=len, rax=entry, rcx=-1|0|1
+_FIND: ; rsi=ctstr => rsi=ctstr, rax=entry, rcx=-1|0|1, rdx=ctstrlen
+	movzx	edx, byte [rsi]			; get string length
+	inc	rsi				; get string
 	mov	rax, last_link
 .next:
 	mov	rax, [rax] 			; go to next word
@@ -530,6 +530,13 @@ ASMWORD TICK, "'"
 	call	_WORD
 	call	_FIND
 	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
+	push	rax
+	NEXT
+
+ASMWORD COUNT, "COUNT"
+	mov	rsi, qword [rsp]
+	movzx	eax, byte [rsi]
+	inc	qword [rsp]
 	push	rax
 	NEXT
 
@@ -612,9 +619,9 @@ init_data_seg: ; here=brk(0); brk(here+DATA_SEG_SIZE);
 
 FORTHWORD baseinterp, ""
 	dq	DOCOL, $WORD, FIND, ZBRANCH, 4*8, EXECUTE, BRANCH, -6*8, \
-			LIT, 0, UNROT, TONUMBER, ZBRANCH, 3*8, BRANCH, 4*8, \
-			DROP, BRANCH, -17*8, \
-			DROP, DROP, LIT, '?', EMIT, BRANCH, -24*8
+			LIT, 0, SWAP, COUNT, TONUMBER, ZBRANCH, 3*8, BRANCH, 4*8, \
+			DROP, BRANCH, -18*8, \
+			DROP, DROP, LIT, '?', EMIT, BRANCH, -25*8
 
 ;;;;;;; Executable entry point ;;;;;;;
 

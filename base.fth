@@ -43,6 +43,7 @@ KEY	R		C,
 '	,		,
 
 '	WORD		,
+'	COUNT		,
 
 '	DUP		,
 '	C,		,
@@ -133,7 +134,7 @@ HEADER INTERPRET
 '	STATE		,
 '	@		,
 '	0BRANCH		,
-	34 CELL *	,
+	35 CELL *	,
 
 '	DUP		,
 '	0BRANCH		,
@@ -153,7 +154,8 @@ HEADER INTERPRET
 '	DROP		,
 '	LIT		,
 	0		,
-'	-ROT		,
+'	SWAP		,
+'	COUNT		,
 '	>NUMBER		,
 '	DUP		,
 '	0BRANCH		,
@@ -167,7 +169,7 @@ HEADER INTERPRET
 '	DROP		,
 '	DROP		,
 '	LIT		,
-	' LIT	,
+	' LIT		,
 '	,		,
 '	,		,
 '	EXIT		,
@@ -179,7 +181,8 @@ HEADER INTERPRET
 
 '	LIT		,
 	0		,
-'	-ROT		,
+'	SWAP		,
+'	COUNT		,
 '	>NUMBER		,
 '	DUP		,
 '	0BRANCH		,
@@ -223,7 +226,7 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : CHAR+ 1 + ;
 : CHARS ;
 
-: CHAR WORD DROP C@ ;
+: CHAR WORD CHAR+ C@ ;
 
 : 2* 1 LSHIFT ;
 : 2/ 1 RSHIFT ;
@@ -261,6 +264,7 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : VARIABLE CREATE 0 , ;
 
 : CLEAR S0 SP! ;
+: DEPTH S0 SP@ - CELL / 1- ;
 : ABORT CLEAR REFILL QUIT ;
 
 : IF ['] 0BRANCH , HERE 0 , ; IMMEDIATE
