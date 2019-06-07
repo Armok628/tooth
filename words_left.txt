@@ -54,7 +54,7 @@ This list is obviously subject to change.
 ?DUP				implemented in Forth
 @				implemented in assembly
 ABORT				implemented in Forth
-ABORT"				planned in Forth
+ABORT"				implemented in Forth
 ABS				implemented in Forth ( : ABS DUP 0< IF NEGATE THEN ; )
 ACCEPT				planned in Forth
 ALIGN				planned in Forth ( : HERE DUP ALIGNED - ALLOT ; )
