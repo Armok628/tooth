@@ -346,10 +346,10 @@ BUFSIZE equ 256
 
 	section .data
 
-termbuf: times BUFSIZE db 0 ; fetch with TIB
+termbuf: times BUFSIZE db 0
 keycount: dq 0 ; fetch with SOURCE
 nextkey: dq 0 ; fetch with >IN
-pad: times 64 db 0 ; fetch with PAD
+wordbuf: times 64 db 0
 
 inputbuf: dq termbuf ; store with EVALUATE
 sourceid: dq 0 ; fetch with SOURCE-ID
@@ -368,6 +368,26 @@ ASMWORD EVALUATE, "EVALUATE" ; ( addr u -- )
 	pop	qword [inputbuf]
 	NEXT
 
+ASMWORD REFILL, "REFILL" ; ( -- err )
+	call	_REFILL
+	test	rax, rax
+	jz	.none
+	push	qword ~0
+	NEXT
+.none:	push	qword 0
+	NEXT
+_REFILL: ; => rax=n
+	mov	rax, SYS_READ
+	mov	rdi, STDIN
+	mov	rsi, termbuf
+	mov	rdx, BUFSIZE
+	syscall					; read(0,termbuf,BUFSIZE)
+	mov	qword [inputbuf], rsi
+	mov	qword [keycount], rax
+	mov	qword [sourceid], 0
+	mov	qword [nextkey], 0
+	ret
+
 ASMWORD	KEY, "KEY" ; ( -- c )
 	call	_KEY
 	push	rax
@@ -381,21 +401,14 @@ _KEY: ; => al=key
 	movzx	eax, byte [rax+rcx]		; get key from buffer
 	ret					; return it
 .read:
-	mov	rsi, termbuf			; load terminal buffer address
-	mov	qword [inputbuf], rsi		; store as pointer to input buffer
-	mov	qword [sourceid], 0		; reset SOURCE_ID
 	push	rdi				; preserve rdi for stosb in word
-	mov	rax, SYS_READ
-	mov	rdi, STDIN
-	mov	rdx, BUFSIZE
-	syscall					; read(0,termbuf,BUFSIZE)
+	call	_REFILL
 	pop	rdi				; restore rdi
 	test	rax, rax			; check for any bytes read
-	jz	.exit	 			; if none, exit
-	mov	qword [keycount], rax		; else set keycount
-	mov	qword [nextkey], 1		; reset next key index
-	movzx	eax, byte [termbuf]		; load first key
-	ret					; return key in rax
+	jz	.exit				; if none, exit
+	inc	qword [nextkey]			; else increment nextkey
+	movzx	eax, byte [termbuf]		; get next key
+	ret
 .exit:
 	mov	rax, SYS_EXIT
 	xor	rdi, rdi
@@ -406,9 +419,8 @@ ASMWORD WORD, "WORD" ; ( -- addr u )
 	push	rsi
 	push	rdx
 	NEXT
-
 _WORD: ; => rsi=str, rdx=len
-	mov	rdi, pad
+	mov	rdi, wordbuf
 .start:
 	call	_KEY 				; get a key in al
 	cmp	al, byte ' '
@@ -420,7 +432,7 @@ _WORD: ; => rsi=str, rdx=len
 	jle	.end 				; if key is whitespace, finish
 	jmp	.key 				; continue
 .end:
-	mov	rsi, pad			; load string into rsi
+	mov	rsi, wordbuf			; load string address into rsi
 	mov	rdx, rdi
 	sub	rdx, rsi			; load length into rdx
 	ret
@@ -565,8 +577,6 @@ FORTHCONST R0, "R0", ret_stack
 FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
 FORTHCONST S0_CONST, "S0", [S0]
 FORTHCONST SOURCE_ID, "SOURCE-ID", [sourceid]
-FORTHCONST TIB, "TIB", termbuf
-FORTHCONST PAD, "PAD", pad
 FORTHCONST BASE, "BASE", base
 FORTHCONST F_IMM_CONST, "F_IMM", F_IMM
 FORTHCONST F_HID_CONST, "F_HID", F_HID

@@ -29,25 +29,25 @@ This list is obviously subject to change.
 ."				planned in Forth
 /				planned in Forth
 /MOD				implemented in assembly
-0<				planned in Forth
-0=				planned in Forth
+0<				implemented in Forth
+0=				implemented in Forth
 1+				implemented in assembly
 1-				implemented in assembly
-2!			(???)	debatable necessitude
-2*			(???)	debatable necessitude
-2/			(???)	debatable necessitude
-2@			(???)	debatable necessitude
-2DROP			(???)	debatable necessitude
-2DUP			(???)	debatable necessitude
-2OVER			(???)	debatable necessitude
-2SWAP			(???)	debatable necessitude
+2!				implemented in Forth
+2*				implemented in Forth
+2/				implemented in Forth
+2@				implemented in Forth
+2DROP				implemented in Forth
+2DUP				implemented in Forth
+2OVER				implemented in Forth
+2SWAP				implemented in Forth
 :				implemented in Forth
 ;				implemented in Forth
 <				implemented in assembly
 <#			(???)	unplanned as of yet
 =				implemented in assembly
 >				implemented in assembly
->BODY				planned in Forth
+>BODY				implemented in Forth
 >IN				implemented in assembly
 >NUMBER				implemented in assembly
 >R				implemented in assembly
@@ -55,10 +55,10 @@ This list is obviously subject to change.
 @				implemented in assembly
 ABORT				implemented in Forth
 ABORT"				planned in Forth
-ABS				planned in Forth ( : ABS DUP IF NEGATE THEN ; )
+ABS				implemented in Forth ( : ABS DUP 0< IF NEGATE THEN ; )
 ACCEPT				planned in Forth
 ALIGN				planned in Forth ( : HERE DUP ALIGNED - ALLOT ; )
-ALIGNED				planned in Forth ( : ALIGNED 1- 7 INVERT AND 8 + ; )
+ALIGNED			(???)	planned in Forth ( : ALIGNED 1- CELL 1- INVERT AND CELL+ ; )
 ALLOT				implemented in assembly
 AND				implemented in assembly
 BASE				implemented in assembly
@@ -67,14 +67,14 @@ BL				implemented in Forth
 C!				implemented in assembly
 C,				implemented in Forth
 C@				implemented in assembly
-CELL+				planned in Forth ( : CELL+ 1+ ; )
-CELLS				planned in Forth
-CHAR				planned in Forth (see KEY)
-CHAR+				planned in Forth
-CHARS				planned in Forth
+CELL+				implemented in Forth
+CELLS				implemented in Forth
+CHAR				implemented in Forth
+CHAR+				implemented in Forth
+CHARS				implemented in Forth
 CONSTANT			implemented in Forth
-COUNT				planned in Forth
-CR				planned in Forth
+COUNT			(???)	planned in Forth
+CR				implemented in Forth
 CREATE				implemented in Forth
 DECIMAL				implemented in Forth
 DEPTH				planned in Forth ( : DEPTH S0 RSP@ - 3 RSHIFT ; )
@@ -93,30 +93,30 @@ FIND				implemented in assembly
 FM/MOD			(???)	debatable necessitude
 HERE				implemented in assembly
 HOLD			(???)	unplanned as of yet
-I				planned in Forth
+I				implemented in Forth
 IF				implemented in Forth
 IMMEDIATE			implemented in Forth
 INVERT				implemented in assembly
-J				planned in Forth
+J				implemented in Forth
 KEY				implemented in assembly
 LEAVE				planned in Forth
 LITERAL				implemented in assembly
 LOOP				implemented in Forth
 LSHIFT				implemented in assembly
 M*			(???)	debatable necessitude
-MAX				planned in Forth
-MIN				planned in Forth
-MOD				planned in Forth
-MOVE				planned in Forth
+MAX				implemented in Forth
+MIN				implemented in Forth
+MOD				implemented in Forth
+MOVE			(???)	planned in Forth (better as `rep movsb`?)
 NEGATE				implemented in assembly
 OR				implemented in assembly
 OVER				implemented in assembly
-POSTPONE			planned in Forth
+POSTPONE			implemented in Forth
 QUIT				implemented in Forth
 R>				implemented in assembly
 R@				implemented in assembly
 RECURSE				planned in Forth
-REPEAT				planned in Forth
+REPEAT				implemented in Forth
 ROT				implemented in assembly
 RSHIFT				implemented in assembly
 S"				planned in Forth
@@ -124,8 +124,8 @@ S>D			(???)	debatable necessitude
 SIGN			(???)	unplanned as of yet
 SM/REM			(???)	debatable necessitude
 SOURCE				implemented in assembly
-SPACE				planned in Forth
-SPACES				planned in Forth
+SPACE				implemented in Forth
+SPACES				implemented in Forth
 STATE				implemented in Forth
 SWAP				implemented in assembly
 THEN				implemented in Forth
@@ -141,19 +141,19 @@ WHILE				implemented in Forth
 WORD				implemented in assembly
 XOR				implemented in assembly
 [				implemented in Forth
-[']				planned in Forth
-[CHAR]				planned in Forth
+[']				implemented in Forth
+[CHAR]				implemented in Forth
 ]				implemented in Forth
 
 	Core extension words
 
 .(				planned in Forth
 .R				planned in Forth
-0<>				planned in Forth
-0>				planned in Forth
-2>R			(???)	debatable necessitude
-2R>			(???)	debatable necessitude
-2R@			(???)	debatable necessitude
+0<>				implemented in Forth
+0>				implemented in Forth
+2>R				implemented in Forth
+2R>				implemented in Forth
+2R@				implemented in Forth
 :NONAME				planned in Forth
 <>				implemented in assembly
 ?DO				implemented in Forth
@@ -180,18 +180,18 @@ PAD				planned in Forth
 PARSE			(???)	planned in Forth (better as `repne scasb`?)
 PARSE-NAME		(???)	planned in Forth
 PICK			(???)	planned in Forth (depends on ability to get pointer to TOS)
-REFILL			(???)	unplanned as of yet
+REFILL				implemented in assembly
 RESTORE-INPUT		(???)	unplanned as of yet
 ROLL				planned in Forth
 S\"			(???)	planned in Forth
 SAVE-INPUT		(???)	unplanned as of yet
 SOURCE-ID			implemented in assembly (indirect constant)
 TO			(???)	unplanned as of yet
-TRUE				planned in Forth ( : TRUE 1 ; )
+TRUE				planned in Forth ( : TRUE -1 ; )
 TUCK				planned in Forth
 U.R				planned in Forth
 U>				implemented in assembly
-UNUSED				planned in Forth ( : UNUSED HERE SYS_BRK 0 SYSCALL1 - 3 RSHIFT ; )
+UNUSED				planned in Forth ( : UNUSED HERE SYS_BRK 0 SYSCALL1 - ; )
 VALUE				planned in Forth
 WITHIN				planned in Forth
 [COMPILE]			planned in Forth
