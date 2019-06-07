@@ -21,13 +21,13 @@ This list is obviously subject to change.
 */				planned in Forth
 */MOD				planned in Forth
 +				implemented in assembly
-+!				planned in Forth
++!				implemented in Forth
 +LOOP				implemented in Forth
 ,				implemented in Forth
 -				implemented in assembly
 .				implemented in Forth
-."				planned in Forth
-/				planned in Forth
+."				implemented in Forth
+/				implemented in Forth
 /MOD				implemented in assembly
 0<				implemented in Forth
 0=				implemented in Forth
@@ -51,7 +51,7 @@ This list is obviously subject to change.
 >IN				implemented in assembly
 >NUMBER				implemented in assembly
 >R				implemented in assembly
-?DUP				planned in Forth
+?DUP				implemented in Forth
 @				implemented in assembly
 ABORT				implemented in Forth
 ABORT"				planned in Forth
@@ -119,7 +119,7 @@ RECURSE				planned in Forth
 REPEAT				implemented in Forth
 ROT				implemented in assembly
 RSHIFT				implemented in assembly
-S"				planned in Forth
+S"				implemented in Forth
 S>D			(???)	debatable necessitude
 SIGN			(???)	unplanned as of yet
 SM/REM			(???)	debatable necessitude

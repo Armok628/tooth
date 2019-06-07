@@ -4,7 +4,9 @@
 
 : test_begin_until 0 SWAP BEGIN TUCK + SWAP 1- DUP 0 <= UNTIL DROP ;
 
-\ 0 EXECUTE (comment test)
+\ 0 EXECUTE
+( comment test )
+
 : test_begin_again 0 BEGIN DUP . CR 1+ AGAIN ;
 
 : test_do_loop 0 DO I . CR LOOP ;
@@ -12,3 +14,5 @@
 : test_do_+loop -ROT DO I . CR DUP +LOOP ;
 
 : test_?do_loop ?DO I . CR LOOP ;
+
+: hello ." Hello, world!" CR ;
