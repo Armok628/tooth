@@ -1,7 +1,7 @@
 HERE LATEST DUP @	HERE ! CELL ALLOT
 	1		HERE C! 1 ALLOT
 KEY	,		HERE C! 1 ALLOT
-	0		HERE C! 1 ALLOT
+	1		HERE C! 1 ALLOT
 	!
 	DOCOL		HERE ! CELL ALLOT
 '	HERE		HERE ! CELL ALLOT
@@ -15,7 +15,7 @@ HERE LATEST DUP @	,
 	2		HERE C! 1 ALLOT
 KEY	C		HERE C! 1 ALLOT
 KEY	,		HERE C! 1 ALLOT
-	0		HERE C! 1 ALLOT
+	2		HERE C! 1 ALLOT
 	!
 	DOCOL		,
 '	HERE		,
@@ -33,7 +33,7 @@ KEY	A		C,
 KEY	D		C,
 KEY	E		C,
 KEY	R		C,
-	0		C,
+	6		C,
 	!
 	DOCOL		,
 '	HERE		,
@@ -47,6 +47,7 @@ KEY	R		C,
 
 '	DUP		,
 '	C,		,
+'	TUCK		,
 
 '	DUP		,
 '	0BRANCH		,
@@ -63,8 +64,6 @@ KEY	R		C,
 
 '	DROP		,
 '	DROP		,
-'	LIT		,
-	0		,
 '	C,		,
 
 '	!		,
@@ -253,6 +252,7 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 	['] EXIT ,
 	CELL ALLOT
 ;
+: LENMASK [ F_IMM F_HID OR INVERT ] LITERAL ;
 : >XT CELL+ DUP C@ + 2 + ;
 : DOES> LATEST @ >XT 3 CELLS +
 	['] BRANCH OVER ! CELL+
@@ -261,6 +261,10 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : >BODY 5 CELLS + ;
 : CONSTANT CREATE , DOES> @ ;
 : VARIABLE CREATE 0 , ;
+
+: >LINK 1- DUP C@ - 1- CELL - ;
+: HIDE ' >LINK CELL+ DUP C@ F_HID OR SWAP ! ;
+: FORGET ' >LINK DUP @ SWAP HERE - ALLOT LATEST ! ;
 
 : CLEAR S0 SP! ;
 : DEPTH S0 SP@ - CELL / 1- ;

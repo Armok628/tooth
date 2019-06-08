@@ -206,3 +206,7 @@ HEADER				implemented in Forth
 CONTINUE			planned in Forth
 BREAK				planned in Forth
 CLEAR				implemented in Forth
+>XT				implemented in Forth
+>LINK				implemented in Forth
+FORGET				implemented in Forth
+HIDE				implemented in Forth

@@ -24,7 +24,7 @@
 	dq	$%[PREVLINK]		; compile link to previous link
 	%define PREVLINK %1_LINK	; set next previous link to here
 	%strlen l %2
-	db	%3|%[l],%2,0		; compile bytes: flags|len, string, 0
+	db	%3|%[l],%2,%[l]		; compile bytes: flags|len, string, len
 	%undef l
 %endmacro
 

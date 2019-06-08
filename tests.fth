@@ -16,3 +16,6 @@
 : test_?do_loop ?DO I . CR LOOP ;
 
 : hello ." Hello, world!" CR ;
+
+: test_>link >LINK CELL+ COUNT LENMASK AND TYPE ;
+( ^ prints name associated with xt )
