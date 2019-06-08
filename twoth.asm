@@ -487,7 +487,6 @@ ASMWORD FIND, "FIND" ; ( ctstr -- ctstr 0 | xt +/-1 )
 	call	_FIND				; load entry into rax
 	test	rcx, rcx			; test error
 	jz	.notfound			; if no error:
-	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
 	mov	qword [rsp], rax		; replace counted string with xt
 	push	rcx				; push find code (+/-1)
 	NEXT
@@ -520,7 +519,8 @@ _FIND: ; rsi=ctstr => rsi=ctstr, rax=entry, rcx=-1|0|1, rdx=ctstrlen
 	jnz	.imm				; if immediate, return now
 	neg	rcx				; else set error to -1 (found)
 .imm:
-	ret
+	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
+	ret					; return
 .undef:						; if not found:
 	xor	rax, rax			; set entry to 0
 	xor	rcx, rcx			; set error to 0 (not found)
@@ -529,7 +529,6 @@ _FIND: ; rsi=ctstr => rsi=ctstr, rax=entry, rcx=-1|0|1, rdx=ctstrlen
 ASMWORD TICK, "'"
 	call	_WORD
 	call	_FIND
-	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
 	push	rax
 	NEXT
 
