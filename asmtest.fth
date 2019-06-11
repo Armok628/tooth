@@ -1,0 +1,35 @@
+( none of this is set in stone; just proof of concept )
+
+HEX
+
+: PUSH 50 + C, ;
+: POP 58 + C, ;
+: ADD 01 C, 8 * C0 + + C, ;
+
+0 CONSTANT RAX
+1 CONSTANT RCX
+2 CONSTANT RDX
+3 CONSTANT RBX
+4 CONSTANT RSP
+5 CONSTANT RBP
+6 CONSTANT RSI
+7 CONSTANT RDI
+
+: REX.W 48 C, ;
+
+: NEXT
+	REX.W 8B C, 03 C,
+	REX.W 83 C, C3 C, 08 C,
+	FF C, 20 C,
+;
+
+: ASMWORD HEADER HERE CELL+ , ;
+
+ASMWORD TEST ( implements + )
+	RAX		POP
+	RDX		POP
+	RAX RDX		ADD
+	RAX		PUSH
+	NEXT
+
+DECIMAL
