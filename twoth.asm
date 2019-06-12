@@ -1,6 +1,6 @@
 ;;;;;;; Macros ;;;;;;;
 
-%macro NEXT 0 ; rbx: pointer to address of next procedure in array
+%macro NEXT 0 ; rbx: pointer to next xt in array
 	mov	rax, [rbx]
 	add	rbx, 8
 	jmp	[rax]

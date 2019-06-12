@@ -1,35 +1,43 @@
-( none of this is set in stone; just proof of concept )
+\ none of this is set in stone; just proof of concept
 
 HEX
 
-: PUSH 50 + C, ;
-: POP 58 + C, ;
-: ADD 01 C, 8 * C0 + + C, ;
-
-0 CONSTANT RAX
-1 CONSTANT RCX
-2 CONSTANT RDX
-3 CONSTANT RBX
-4 CONSTANT RSP
-5 CONSTANT RBP
-6 CONSTANT RSI
-7 CONSTANT RDI
+\ Intel-style operand order where applicable
+\ i.e. %1 %2 ADD => %1+=%2
 
 : REX.W 48 C, ;
+: PUSH 50 + C, ;
+: POP 58 + C, ;
+: LOD REX.W 8B C, 8 * + C, ;
+: STO REX.W 89 C, SWAP 8 * + C, ;
+: DW, 4 0 DO DUP C, 8 RSHIFT LOOP DROP ;
+: ADD REX.W 01 C, 8 * C0 + + C, ;
+: ADD$ REX.W 81 C, SWAP C0 + C, DW, ;
+: SUB REX.W 29 C, 8 * C0 + + C, ;
+: SUB$ REX.W 81 C, SWAP E8 + C, DW, ;
+: JMP FF C, 20 + C, ;
 
-: NEXT
-	REX.W 8B C, 03 C,
-	REX.W 83 C, C3 C, 08 C,
-	FF C, 20 C,
+0 CONSTANT %1 \ RAX
+1 CONSTANT %2 \ RCX
+2 CONSTANT %3 \ RDX
+6 CONSTANT %4 \ RSI
+7 CONSTANT %5 \ RDI
+3 CONSTANT %X \ "next xt"	RBX
+4 CONSTANT %S \ "stack"		RSP
+5 CONSTANT %R \ "ret'n stack"	RBP
+
+: END-CODE
+REX.W	%X %1	LOD
+REX.W	%X CELL	ADD$
+	%1	JMP
 ;
 
-: ASMWORD HEADER HERE CELL+ , ;
+: CODE HEADER HERE CELL+ , ;
 
-ASMWORD TEST ( implements + )
-	RAX		POP
-	RDX		POP
-	RAX RDX		ADD
-	RAX		PUSH
-	NEXT
+CODE TEST ( implements CELL+ )
+	%1	POP
+	%1 CELL	ADD$
+	%1	PUSH
+END-CODE
 
 DECIMAL
