@@ -15,6 +15,7 @@ HEX
 : ADD$ REX.W 81 C, SWAP C0 + C, DW, ;
 : SUB REX.W 29 C, 8 * C0 + + C, ;
 : SUB$ REX.W 81 C, SWAP E8 + C, DW, ;
+: PUSH$ 68 C, DW, ;
 : JMP FF C, 20 + C, ;
 
 0 CONSTANT %1 \ RAX
