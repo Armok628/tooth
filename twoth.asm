@@ -20,11 +20,14 @@
 
 %macro DICTLINK 2-3 0			; to make a new dictionary definition:
 	section	.rodata
-%1_LINK:
-	dq	$%[PREVLINK]		; compile link to previous link
-	%define PREVLINK %1_LINK	; set next previous link to here
+%1_NAME:				; label for counted string
 	%strlen l %2
-	db	%3|%[l],%2,%[l]		; compile bytes: flags|len, string, len
+	db	%[l],%2			; length, string
+	align	8
+%1_LINK:
+	dq	$%[PREVLINK]		; pointer to previous link
+	%define PREVLINK %1_LINK	; set next previous link to here
+	dq	%3|%[l],%1_NAME		; compile bytes: flags|len, string address
 	%undef l
 %endmacro
 
@@ -309,6 +312,20 @@ ASMWORD ALLOT, "ALLOT"
 	add	qword [here], rax
 	NEXT
 
+;;;;;;; User memory interaction ;;;;;;;
+
+FORTHWORD COMMA, ","
+dq	DOCOL, HERE, STORE, CELL, ALLOT, EXIT
+
+FORTHWORD CCOMMA, "C,"
+dq	DOCOL, HERE, CSTORE, LIT, 1, ALLOT, EXIT
+
+FORTHWORD ALIGNED, "ALIGNED"
+dq	DOCOL, DECR, CELL, DECR, INVERT, AND, CELL, ADD, EXIT
+
+FORTHWORD ALIGN, "ALIGN"
+dq	DOCOL, HERE, DUP, ALIGNED, SUB, NEGATE, ALLOT, EXIT
+
 ;;;;;;; Branching ;;;;;;;
 
 ASMWORD BRANCH, "BRANCH"
@@ -501,13 +518,14 @@ _FIND: ; rsi=ctstr => rsi=ctstr, rax=entry, rcx=-1|0|1, rdx=ctstrlen
 	mov	rax, [rax] 			; go to next word
 	test	rax, rax
 	jz	.undef 				; if NULL, none left
-	movzx	ecx, byte [rax+8] 		; get entry string length|flags
+	mov	rcx, qword [rax+8] 		; get entry string length|flags
 	test	cl, F_HID 			; if word is hidden...
 	jnz	.next 				; move on.
 	and	cl, ~F_IMM 			; remove immediate flag
 	cmp	cl, dl 				; compare lengths
 	jne	.next 				; if not equal, move on
-	lea	rdi, [rax+9] 			; else load entry string
+	mov	rdi, qword [rax+16]		; else load entry string
+	inc	rdi				; skip length byte
 .cmpstr:
 	push	rsi				; save search string
 	repe	cmpsb 				; compare strings
@@ -519,7 +537,7 @@ _FIND: ; rsi=ctstr => rsi=ctstr, rax=entry, rcx=-1|0|1, rdx=ctstrlen
 	jnz	.imm				; if immediate, return now
 	neg	rcx				; else set error to -1 (found)
 .imm:
-	lea	rax, [rax+8+1+rdx+1]		; load xt into rax
+	add	rax, 24				; load xt into rax
 	ret					; return
 .undef:						; if not found:
 	xor	rax, rax			; set entry to 0
@@ -617,10 +635,10 @@ init_data_seg: ; here=brk(0); brk(here+DATA_SEG_SIZE);
 ; BEGIN WORD FIND IF EXECUTE ELSE >NUMBER IF DROP DROP [CHAR] ? EMIT ELSE DROP THEN THEN AGAIN
 
 FORTHWORD baseinterp, ""
-	dq	DOCOL, $WORD, FIND, ZBRANCH, 4*8, EXECUTE, BRANCH, -6*8, \
-			LIT, 0, SWAP, COUNT, TONUMBER, ZBRANCH, 3*8, BRANCH, 4*8, \
-			DROP, BRANCH, -18*8, \
-			DROP, DROP, LIT, '?', EMIT, BRANCH, -25*8
+dq	DOCOL, $WORD, FIND, ZBRANCH, 4*8, EXECUTE, BRANCH, -6*8, \
+		LIT, 0, SWAP, COUNT, TONUMBER, ZBRANCH, 3*8, BRANCH, 4*8, \
+		DROP, BRANCH, -18*8, \
+		DROP, DROP, LIT, '?', EMIT, BRANCH, -25*8
 
 ;;;;;;; Executable entry point ;;;;;;;
 

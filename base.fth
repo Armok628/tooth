@@ -1,31 +1,4 @@
-HERE LATEST DUP @	HERE ! CELL ALLOT
-	1		HERE C! 1 ALLOT
-KEY	,		HERE C! 1 ALLOT
-	1		HERE C! 1 ALLOT
-	!
-	DOCOL		HERE ! CELL ALLOT
-'	HERE		HERE ! CELL ALLOT
-'	!		HERE ! CELL ALLOT
-'	LIT		HERE ! CELL ALLOT
-	CELL		HERE ! CELL ALLOT
-'	ALLOT		HERE ! CELL ALLOT
-'	EXIT		HERE ! CELL ALLOT
-
-HERE LATEST DUP @	,
-	2		HERE C! 1 ALLOT
-KEY	C		HERE C! 1 ALLOT
-KEY	,		HERE C! 1 ALLOT
-	2		HERE C! 1 ALLOT
-	!
-	DOCOL		,
-'	HERE		,
-'	C!		,
-'	LIT		,
-	1		,
-'	ALLOT		,
-'	EXIT		,
-
-HERE LATEST DUP @	,
+HERE
 	6		C,
 KEY	H		C,
 KEY	E		C,
@@ -33,22 +6,19 @@ KEY	A		C,
 KEY	D		C,
 KEY	E		C,
 KEY	R		C,
-	6		C,
-	!
+ALIGN HERE
+	LATEST @	,
+	6		,
+	SWAP		,
+LATEST !
 	DOCOL		,
 '	HERE		,
-'	LATEST		,
-'	DUP		,
-'	@		,
-'	,		,
-
 '	WORD		,
 '	COUNT		,
+'	TUCK		,
 
 '	DUP		,
 '	C,		,
-'	TUCK		,
-
 '	DUP		,
 '	0BRANCH		,
 	10 CELL *	,
@@ -64,8 +34,15 @@ KEY	R		C,
 
 '	DROP		,
 '	DROP		,
-'	C,		,
-
+'	ALIGN		,
+'	HERE		,
+'	LATEST		,
+'	@		,
+'	,		,
+'	-ROT		,
+'	,		,
+'	,		,
+'	LATEST		,
 '	!		,
 '	EXIT		,
 
@@ -76,17 +53,17 @@ HEADER IMMEDIATE
 '	CELL		,
 '	+		,
 '	DUP		,
-'	C@		,
+'	@		,
 '	F_IMM		,
 '	OR		,
 '	SWAP		,
-'	C!		,
+'	!		,
 '	EXIT		,
 
 HEADER STATE
 	DOCOL		,
 '	LIT		,
-HERE CELL DUP + +	,
+	HERE 2 CELL * +	,
 '	EXIT		,
 	0		,
 
@@ -253,7 +230,7 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 	CELL ALLOT
 ;
 : LENMASK [ F_IMM F_HID OR INVERT ] LITERAL ;
-: >XT CELL+ DUP C@ + 2 + ;
+: >XT 3 CELLS + ;
 : DOES> LATEST @ >XT 3 CELLS +
 	['] BRANCH OVER ! CELL+
 	R> OVER - SWAP !
@@ -262,7 +239,7 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : CONSTANT CREATE , DOES> @ ;
 : VARIABLE CREATE 0 , ;
 
-: >LINK 1- DUP C@ - 1- CELL - ;
+: >LINK 3 CELLS - ;
 : HIDE ' >LINK CELL+ DUP C@ F_HID OR SWAP ! ;
 : FORGET ' >LINK DUP @ SWAP HERE - ALLOT LATEST ! ;
 
@@ -388,9 +365,9 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 		['] LIT ,
 		HERE 5 CELLS + ,
 		['] LIT ,
-		HERE 0 ,
+		HERE 0 ,	( save address of literal )
 		['] BRANCH ,
-		HERE 0 ,
+		HERE 0 ,	( save address of branch offset )
 	THEN
 	HERE
 	BEGIN
@@ -402,6 +379,7 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 	STATE @ IF
 		HERE - NEGATE
 		SWAP
+		ALIGN
 		POSTPONE THEN
 		SWAP !
 	ELSE

@@ -11,11 +11,11 @@
 
 : test_do_loop 0 DO I . CR LOOP ;
 
-: test_do_+loop -ROT DO I . CR DUP +LOOP ;
+: test_do_+loop 1 DO I DUP . CR +LOOP ;
 
 : test_?do_loop ?DO I . CR LOOP ;
 
 : hello ." Hello, world!" CR ;
 
-: test_>link >LINK CELL+ COUNT LENMASK AND TYPE ;
+: test_>link >LINK 2 CELLS + @ COUNT LENMASK AND TYPE ;
 ( ^ prints name associated with xt )
