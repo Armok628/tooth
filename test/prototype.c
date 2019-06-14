@@ -336,6 +336,47 @@ CWORD(NULL,"WORD",f_word) {
 	next();
 }
 /********************************/
+#define CONSTANT(x) { push((cell)x); next(); }
+cell base=10;
+CWORD(NULL,"BASE",f_base) CONSTANT(&base)
+/********************************/
+//CWORD(NULL,">NUMBER",f_tonumber)
+void tonumber(void)
+{
+	register cell l=pop();
+	register char *s=(char *)pop();
+	register cell n=pop();
+	register cell b=base;
+	if (*s=='-') {
+		s++;
+		push(-1);
+	} else
+		push(0);
+	while (l>0) {
+		char d=*s;
+		d-='0';
+		if (d<0)
+			break;
+		else if (d>9) {
+			d-='A'-'0'-10;
+			if (d<10)
+				break;
+		}
+		if (d>b)
+			break;
+		n*=b;
+		n+=d;
+		s++;
+		l--;
+	}
+	if (pop())
+		n=-n;
+	push(n);
+	push((cell)s);
+	push(l);
+	//next();
+}
+/********************************/
 FORTHWORD(NULL,"TEST",dub,
 	(cell)f_docol,
 	(cell)f_dup.xt,
