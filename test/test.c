@@ -16,15 +16,15 @@ typedef void (*ffunc_t)(void);
 #define COUNT(...) sizeof (cell []){__VA_ARGS__}/sizeof(cell)
 #define TOKLEN(x) (sizeof(#x)-1)
 #define CWORD(last,name,cname) \
-void cname##_func(void); \
+void cname##_c(void); \
 struct { \
 	link_t link; \
 	cell xt[1]; \
 } cname = { \
 	{(link_t *)last,TOKLEN(name),#name}, \
-	{(cell)cname##_func} \
+	{(cell)cname##_c} \
 }; \
-void cname##_func(void)
+void cname##_c(void)
 #define FORTHWORD(last,name,cname,...) \
 struct { \
 	link_t link; \
@@ -58,10 +58,6 @@ cell rpop(void)
 	rp=&rp[-1];
 	return *rp;
 }
-cell top(void)
-{
-	return *sp;
-}
 /********************************/
 ffunc_t *xt=NULL;
 ffunc_t *ip=NULL;
@@ -93,10 +89,25 @@ CWORD(NULL,EMIT,f_emit)
 	static char c=0;
 	c=pop();
 	write(STDOUT_FILENO,&c,1);
+	next();
 }
 CWORD(NULL,BYE,f_bye)
 {
 	_exit(0);
+	next();
+}
+/********************************/
+CWORD(NULL,DUP,f_dup)
+{
+	push(sp[-1]);
+	next();
+}
+/********************************/
+CWORD(NULL,+,f_add)
+{
+	register cell b=pop(),a=pop();
+	push(a+b);
+	next();
 }
 /********************************/
 static char inbuf[255];
@@ -135,14 +146,24 @@ void count(void)
 	push((cell)s[0]);
 }
 /********************************/
+FORTHWORD(NULL,TEST,dub,
+	(cell)f_docol,
+	(cell)f_dup.xt,
+	(cell)f_add.xt,
+	(cell)f_exit.xt
+)
 FORTHWORD(NULL,TEST,test,
 	(cell)f_docol,
 	(cell)f_literal.xt,
-	(cell)123,
+	(cell)35,
+	(cell)dub.xt,
+	(cell)f_literal.xt,
+	(cell)7,
+	(cell)f_add.xt,
 	(cell)f_emit.xt,
 	(cell)f_bye.xt
 )
-ffunc_t entry=(ffunc_t)&test.xt;
+ffunc_t entry=(ffunc_t)test.xt;
 int main()//(int argc,char **argv)
 {
 	ip=&entry;
