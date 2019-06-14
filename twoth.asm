@@ -550,12 +550,8 @@ ASMWORD TICK, "'"
 	push	rax
 	NEXT
 
-ASMWORD COUNT, "COUNT"
-	mov	rsi, qword [rsp]
-	movzx	eax, byte [rsi]
-	inc	qword [rsp]
-	push	rax
-	NEXT
+FORTHWORD COUNT, "COUNT"
+dq	DOCOL, DUP, INCR, SWAP, CFETCH, EXIT
 
 ;;;;;;; System call ;;;;;;;
 
