@@ -292,16 +292,18 @@ CWORD(NULL,"EMIT",f_emit)
 static char inbuf[255];
 static cell len=0;
 static cell in=0;
-void refill(void)
+cell refill(void)
 { // refill inbuf with keyboard input
-	in=0;
-	len=read(STDIN_FILENO,inbuf,255);
-	if (!len)
+	register cell l=read(STDIN_FILENO,inbuf,255);
+	if (!l)
 		_exit(0);
+	in=0;
+	len=l;
+	return l;
 }
 CWORD(NULL,"REFILL",f_refill)
 {
-	refill();
+	push(refill()?~0:0);
 	next();
 }
 char key(void)
