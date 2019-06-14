@@ -1,5 +1,5 @@
 # twoth
-A minimal-assembly Forth implementation for x86-64 Linux
+A minimal-core Forth implementation for x86-64 Linux
 
 ### The Plan
 
