@@ -13,22 +13,22 @@ typedef struct link_s {
 	char *name;
 } link_t;
 typedef void (*ffunc_t)(void);
-#define COUNT(...) sizeof(ffunc_t []){__VA_ARGS__}/sizeof(ffunc_t)
+#define COUNT(...) sizeof (cell []){__VA_ARGS__}/sizeof(cell)
 #define TOKLEN(x) (sizeof(#x)-1)
 #define CWORD(last,name,cname) \
 void cname##_func(void); \
 struct { \
 	link_t link; \
-	ffunc_t *xt[1]; \
+	cell xt[1]; \
 } cname = { \
 	{(link_t *)last,TOKLEN(name),#name}, \
-	{(ffunc_t *)cname##_func} \
+	{(cell)cname##_func} \
 }; \
 void cname##_func(void)
 #define FORTHWORD(last,name,cname,...) \
 struct { \
 	link_t link; \
-	ffunc_t *xt[COUNT(__VA_ARGS__)]; \
+	cell xt[COUNT(__VA_ARGS__)]; \
 } cname = { \
 	{last,TOKLEN(name),#name}, \
 	{__VA_ARGS__} \
@@ -136,10 +136,14 @@ void count(void)
 }
 /********************************/
 FORTHWORD(NULL,TEST,test,
-	f_docol,f_literal.xt,123,f_emit.xt,f_bye.xt
+	(cell)f_docol,
+	(cell)f_literal.xt,
+	(cell)123,
+	(cell)f_emit.xt,
+	(cell)f_bye.xt
 )
 ffunc_t entry=(ffunc_t)&test.xt;
-int main(int argc,char **argv)
+int main()//(int argc,char **argv)
 {
 	ip=&entry;
 	next();
