@@ -247,9 +247,9 @@ CWORD(&f_divmod.link,"1+",f_incr)
 { sp[-1]++; next(); }
 CWORD(&f_incr.link,"1-",f_decr)
 { sp[-1]--; next(); }
-CWORD(&f_decr.link,"NEGATE",f_neg)
+CWORD(&f_decr.link,"NEGATE",f_negate)
 { sp[-1]=-sp[-1]; next(); }
-CWORD(&f_neg.link,"INVERT",f_not)
+CWORD(&f_negate.link,"INVERT",f_invert)
 { sp[-1]=~sp[-1]; next(); }
 /********************************/
 #define CMPOP(op) \
@@ -258,7 +258,7 @@ CWORD(&f_neg.link,"INVERT",f_not)
 	sp[-1]=sp[-1] op b?~0:0; \
 	next(); \
 }
-CWORD(&f_not.link,"=",f_eq) CMPOP(==)
+CWORD(&f_invert.link,"=",f_eq) CMPOP(==)
 CWORD(&f_eq.link,"<",f_lt) CMPOP(<)
 CWORD(&f_lt.link,">",f_gt) CMPOP(>)
 CWORD(&f_gt.link,"<=",f_gte) CMPOP(<=)
@@ -481,7 +481,29 @@ CWORD(&f_find.link,"'",f_tick)
 	push((cell)(&((ffunc_t *)l)[3]));
 	next();
 }
-link_t *latest=(link_t *)&f_tick.link;
+/********************************/
+FORTHWORD(&f_tick.link,"ALIGNED",f_aligned,
+	(cell)f_docol,
+	(cell)f_decr.xt,
+	(cell)f_cell.xt,
+	(cell)f_decr.xt,
+	(cell)f_invert.xt,
+	(cell)f_and.xt,
+	(cell)f_cell.xt,
+	(cell)f_add.xt,
+	(cell)f_exit.xt
+)
+FORTHWORD(&f_aligned.link,"ALIGN",f_align,
+	(cell)f_docol,
+	(cell)f_here.xt,
+	(cell)f_dup.xt,
+	(cell)f_aligned.xt,
+	(cell)f_sub.xt,
+	(cell)f_negate.xt,
+	(cell)f_allot.xt,
+	(cell)f_exit.xt
+)
+link_t *latest=(link_t *)&f_align.link;
 /********************************/
 FORTHWORD(NULL,"",baseinterp,
 	(cell)f_docol,
@@ -512,15 +534,6 @@ FORTHWORD(NULL,"",baseinterp,
 	(cell)f_branch.xt,
 	(cell)-25*sizeof(cell),
 )
-/*
-FORTHWORD(NULL,"",baseinterp,
-	(cell)f_docol,
-	(cell)f_tick.xt,
-	(cell)f_execute.xt,
-	(cell)f_branch.xt,
-	(cell)-3*sizeof(cell)
-)
-*/
 ffunc_t entry=(ffunc_t)baseinterp.xt;
 int main()//(int argc,char **argv)
 {
