@@ -244,14 +244,28 @@ CWORD(&f_ugt.link,"U<=",f_ugte) UCMPOP(<=)
 CWORD(&f_ugte.link,"U>=",f_ulte) UCMPOP(>=)
 /********************************/
 #define CONSTANT(x) { push((cell)x); next(); }
+CWORD(&f_ulte.link,"S0",f_s0) CONSTANT(stack)
+CWORD(&f_s0.link,"R0",f_r0) CONSTANT(rstack)
+CWORD(&f_r0.link,"F_IMM",f_imm) CONSTANT(F_IMM)
+CWORD(&f_imm.link,"F_HID",f_hid) CONSTANT(F_HID)
 cell *here=NULL;
-CWORD(&f_ulte.link,"HERE",f_here) CONSTANT(here)
+CWORD(&f_hid.link,"HERE",f_here) CONSTANT(here)
 CWORD(&f_here.link,"CELL",f_cell) CONSTANT(sizeof(cell))
+cell base=10;
+CWORD(&f_cell.link,"BASE",f_base) CONSTANT(&base)
+CWORD(&f_base.link,"DOCOL",f_docol_ptr) CONSTANT(f_docol)
+cell sourceid=0;
+CWORD(&f_docol_ptr.link,"SOURCE-ID",f_sourceid) CONSTANT(sourceid)
+cell in=0;
+CWORD(&f_sourceid.link,">IN",f_in) CONSTANT(in)
+link_t *latest;
+CWORD(&f_in.link,"LATEST",f_latest) CONSTANT(&latest)
+/********************************/
 void init_data_seg(void)
 {
 	here=sbrk(4096*sizeof(cell));
 }
-CWORD(&f_cell.link,"ALLOT",f_allot)
+CWORD(&f_latest.link,"ALLOT",f_allot)
 {
 	register cell i=pop();
 	here=&here[i];
@@ -310,7 +324,8 @@ CWORD(&f_ccomma.link,"EMIT",f_emit)
 /********************************/
 static char inbuf[255];
 static cell len=0;
-static cell in=0;
+//static cell in=0; // (declared previously)
+//static cell sourceid=0; // (declared previously)
 cell refill(void)
 { // refill inbuf with keyboard input
 	register cell l=read(STDIN_FILENO,inbuf,255);
@@ -318,6 +333,7 @@ cell refill(void)
 		_exit(0);
 	in=0;
 	len=l;
+	sourceid=0;
 	return l;
 }
 CWORD(&f_emit.link,"REFILL",f_refill)
@@ -363,9 +379,7 @@ FORTHWORD(&f_word.link,"COUNT",f_count,
 	(cell)f_exit.xt
 )
 /********************************/
-cell base=10;
-CWORD(&f_count.link,"BASE",f_base) CONSTANT(&base)
-CWORD(&f_base.link,">NUMBER",f_tonumber)
+CWORD(&f_count.link,">NUMBER",f_tonumber)
 {
 	register cell l=pop();
 	register char *s=(char *)pop();
@@ -400,8 +414,6 @@ CWORD(&f_base.link,">NUMBER",f_tonumber)
 	next();
 }
 /********************************/
-link_t *latest;
-CWORD(&f_tonumber.link,"LATEST",f_latest) CONSTANT(&latest)
 link_t *find(char *cs)
 {
 	int len=cs[0];
@@ -420,7 +432,7 @@ NEXT:		continue;
 	}
 	return l;
 }
-CWORD(&f_latest.link,"FIND",f_find)
+CWORD(&f_tonumber.link,"FIND",f_find)
 {
 	link_t *l=find((char *)pop());
 	push((cell)(&((ffunc_t *)l)[4]));
@@ -452,6 +464,7 @@ int main()//(int argc,char **argv)
 	ip=&entry;
 	next();
 	*/
+	init_data_seg();
 	printf("%p\n",find(word()));
 	return 0;
 }
