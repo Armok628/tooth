@@ -16,6 +16,7 @@ typedef struct link_s {
 	cell flags;
 	char *name;
 } link_t;
+enum { F_IMM=0x80, F_HID=0x40 };
 typedef void (*ffunc_t)(void);
 #define COUNT(...) sizeof (cell []){__VA_ARGS__}/sizeof(cell)
 #define LEN(x) (sizeof(x)/sizeof(x[0]))
@@ -25,7 +26,7 @@ struct { \
 	link_t link; \
 	cell xt[1]; \
 } cname = { \
-	{(link_t *)last,LEN(name),#name}, \
+	{(link_t *)last,LEN(name)-1,name}, \
 	{(cell)cname##_c} \
 }; \
 void cname##_c(void)
@@ -34,7 +35,7 @@ struct { \
 	link_t link; \
 	cell xt[COUNT(__VA_ARGS__)]; \
 } cname = { \
-	{last,LEN(name)-1,name}, \
+	{(link_t *)last,LEN(name)-1,name}, \
 	{__VA_ARGS__} \
 };
 /********************************/
@@ -65,7 +66,6 @@ static inline cell rpop(void)
 /********************************/
 ffunc_t *xt=NULL;
 ffunc_t *ip=NULL;
-//__attribute__((noinline))
 static inline void next(void)
 {
 	xt=(ffunc_t *)*ip;
@@ -83,41 +83,41 @@ CWORD(NULL,"EXIT",f_exit)
 	ip=(ffunc_t *)rpop();
 	next();
 }
-CWORD(NULL,"LITERAL",f_literal)
+CWORD(&f_exit.link,"LIT",f_lit)
 {
 	push((cell)*ip);
 	ip=&ip[1];
 	next();
 }
-CWORD(NULL,"BYE",f_bye)
+CWORD(&f_lit.link,"BYE",f_bye)
 {
 	_exit(0);
 	next();
 }
-CWORD(NULL,"EXECUTE",f_execute)
+CWORD(&f_bye.link,"EXECUTE",f_execute)
 {
 	register ffunc_t *f=(ffunc_t *)pop();
 	(*f)();
 }
 /********************************/
-CWORD(NULL,"DUP",f_dup)
+CWORD(&f_execute.link,"DUP",f_dup)
 {
 	push(sp[-1]);
 	next();
 }
-CWORD(NULL,"DROP",f_drop)
+CWORD(&f_dup.link,"DROP",f_drop)
 {
 	pop();
 	next();
 }
-CWORD(NULL,"SWAP",f_swap)
+CWORD(&f_drop.link,"SWAP",f_swap)
 {
 	register cell b=pop(),a=pop();
 	push(b);
 	push(a);
 	next();
 }
-CWORD(NULL,"ROT",f_rot)
+CWORD(&f_swap.link,"ROT",f_rot)
 {
 	register cell c=pop(),b=pop(),a=pop();
 	push(b);
@@ -125,7 +125,7 @@ CWORD(NULL,"ROT",f_rot)
 	push(a);
 	next();
 }
-CWORD(NULL,"-ROT",f_unrot)
+CWORD(&f_rot.link,"-ROT",f_unrot)
 {
 	register cell c=pop(),b=pop(),a=pop();
 	push(c);
@@ -133,18 +133,18 @@ CWORD(NULL,"-ROT",f_unrot)
 	push(b);
 	next();
 }
-CWORD(NULL,"OVER",f_over)
+CWORD(&f_unrot.link,"OVER",f_over)
 {
 	push(sp[-2]);
 	next();
 }
-CWORD(NULL,"NIP",f_nip)
+CWORD(&f_over.link,"NIP",f_nip)
 {
 	register cell a=pop();
 	sp[-1]=a;
 	next();
 }
-CWORD(NULL,"TUCK",f_tuck)
+CWORD(&f_nip.link,"TUCK",f_tuck)
 {
 	register cell b=pop(),a=pop();
 	push(b);
@@ -153,38 +153,38 @@ CWORD(NULL,"TUCK",f_tuck)
 	next();
 }
 /********************************/
-CWORD(NULL,">R",f_to_r)
+CWORD(&f_tuck.link,">R",f_to_r)
 {
 	rpush(pop());
 	next();
 }
-CWORD(NULL,"R>",f_from_r)
+CWORD(&f_to_r.link,"R>",f_from_r)
 {
 	push(rpop());
 	next();
 }
-CWORD(NULL,"R@",f_r_fetch)
+CWORD(&f_from_r.link,"R@",f_r_fetch)
 {
 	push(rp[-1]);
 	next();
 }
 /********************************/
-CWORD(NULL,"SP@",f_sp_fetch)
+CWORD(&f_r_fetch.link,"SP@",f_sp_fetch)
 {
 	push((cell)sp);
 	next();
 }
-CWORD(NULL,"SP!",f_sp_store)
+CWORD(&f_sp_fetch.link,"SP!",f_sp_store)
 {
 	sp=(cell *)pop();
 	next();
 }
-CWORD(NULL,"RP@",f_rp_fetch)
+CWORD(&f_sp_store.link,"RP@",f_rp_fetch)
 {
 	push((cell)rp);
 	next();
 }
-CWORD(NULL,"RP!",f_rp_store)
+CWORD(&f_rp_fetch.link,"RP!",f_rp_store)
 {
 	rp=(cell *)pop();
 	next();
@@ -196,28 +196,28 @@ CWORD(NULL,"RP!",f_rp_store)
 	sp[-1] op##= b; \
 	next(); \
 }
-CWORD(NULL,"+",f_add) OP2(+)
-CWORD(NULL,"-",f_sub) OP2(-)
-CWORD(NULL,"*",f_mul) OP2(*)
-CWORD(NULL,"AND",f_and) OP2(&)
-CWORD(NULL,"OR",f_or) OP2(|)
-CWORD(NULL,"XOR",f_xor) OP2(^)
-CWORD(NULL,"LSHIFT",f_shl) OP2(<<)
-CWORD(NULL,"RSHIFT",f_shr) OP2(>>)
-CWORD(NULL,"/MOD",f_divmod)
+CWORD(&f_rp_store.link,"+",f_add) OP2(+)
+CWORD(&f_add.link,"-",f_sub) OP2(-)
+CWORD(&f_sub.link,"*",f_mul) OP2(*)
+CWORD(&f_mul.link,"AND",f_and) OP2(&)
+CWORD(&f_and.link,"OR",f_or) OP2(|)
+CWORD(&f_or.link,"XOR",f_xor) OP2(^)
+CWORD(&f_xor.link,"LSHIFT",f_shl) OP2(<<)
+CWORD(&f_shl.link,"RSHIFT",f_shr) OP2(>>)
+CWORD(&f_shr.link,"/MOD",f_divmod)
 {
 	register cell b=sp[-2],a=sp[-1];
 	sp[-2]=a%b;
 	sp[-1]=a/b;
 	next();
 }
-CWORD(NULL,"1+",f_incr)
+CWORD(&f_divmod.link,"1+",f_incr)
 { sp[-1]++; next(); }
-CWORD(NULL,"1-",f_decr)
+CWORD(&f_incr.link,"1-",f_decr)
 { sp[-1]--; next(); }
-CWORD(NULL,"NEGATE",f_neg)
+CWORD(&f_decr.link,"NEGATE",f_neg)
 { sp[-1]=-sp[-1]; next(); }
-CWORD(NULL,"INVERT",f_not)
+CWORD(&f_neg.link,"INVERT",f_not)
 { sp[-1]=~sp[-1]; next(); }
 /********************************/
 #define CMPOP(op) \
@@ -226,62 +226,81 @@ CWORD(NULL,"INVERT",f_not)
 	sp[-1]=sp[-1] op b?~0:0; \
 	next(); \
 }
-CWORD(NULL,"=",f_eq) CMPOP(==)
-CWORD(NULL,"<",f_lt) CMPOP(<)
-CWORD(NULL,">",f_gt) CMPOP(>)
-CWORD(NULL,"<=",f_gte) CMPOP(<=)
-CWORD(NULL,">=",f_lte) CMPOP(>=)
-CWORD(NULL,"<>",f_neq) CMPOP(!=)
+CWORD(&f_not.link,"=",f_eq) CMPOP(==)
+CWORD(&f_eq.link,"<",f_lt) CMPOP(<)
+CWORD(&f_lt.link,">",f_gt) CMPOP(>)
+CWORD(&f_gt.link,"<=",f_gte) CMPOP(<=)
+CWORD(&f_gte.link,">=",f_lte) CMPOP(>=)
+CWORD(&f_lte.link,"<>",f_neq) CMPOP(!=)
 #define UCMPOP(op) \
 { \
 	register ucell b=(ucell)pop(); \
 	sp[-1]=(ucell)sp[-1] op b?~0:0; \
 	next(); \
 }
-CWORD(NULL,"U<",f_ult) UCMPOP(<)
-CWORD(NULL,"U>",f_ugt) UCMPOP(>)
-CWORD(NULL,"U<=",f_ugte) UCMPOP(<=)
-CWORD(NULL,"U>=",f_ulte) UCMPOP(>=)
+CWORD(&f_neq.link,"U<",f_ult) UCMPOP(<)
+CWORD(&f_ult.link,"U>",f_ugt) UCMPOP(>)
+CWORD(&f_ugt.link,"U<=",f_ugte) UCMPOP(<=)
+CWORD(&f_ugte.link,"U>=",f_ulte) UCMPOP(>=)
 /********************************/
+#define CONSTANT(x) { push((cell)x); next(); }
 cell *here=NULL;
+CWORD(&f_ulte.link,"HERE",f_here) CONSTANT(here)
+CWORD(&f_here.link,"CELL",f_cell) CONSTANT(sizeof(cell))
 void init_data_seg(void)
 {
 	here=sbrk(4096*sizeof(cell));
 }
-CWORD(NULL,"ALLOT",f_allot)
+CWORD(&f_cell.link,"ALLOT",f_allot)
 {
 	register cell i=pop();
 	here=&here[i];
 	next();
 }
-CWORD(NULL,"!",f_store)
+CWORD(&f_allot.link,"!",f_store)
 {
 	register cell *d=(cell *)pop();
 	register cell s=pop();
 	*d=s;
 	next();
 }
-CWORD(NULL,"@",f_fetch)
+CWORD(&f_store.link,"@",f_fetch)
 {
 	register cell *s=(cell *)pop();
 	push(*s);
 	next();
 }
-CWORD(NULL,",",f_comma)
+FORTHWORD(&f_fetch.link,",",f_comma,
+	(cell)f_docol,
+	(cell)f_here.xt,
+	(cell)f_store.xt,
+	(cell)f_cell.xt,
+	(cell)f_allot.xt,
+	(cell)f_exit.xt
+)
+CWORD(&f_comma.link,"C!",f_cstore)
 {
-	*here=pop();
-	here=&here[1];
+	register char *d=(char *)pop();
+	*d=pop();
 	next();
 }
-CWORD(NULL,"C,",f_ccomma)
+CWORD(&f_cstore.link,"C@",f_cfetch)
 {
-	register cell a=pop();
-	*(char *)here=a;
-	here++;
+	register char *s=(char *)pop();
+	push(*s);
 	next();
 }
+FORTHWORD(&f_cfetch.link,"C,",f_ccomma,
+	(cell)f_docol,
+	(cell)f_here.xt,
+	(cell)f_cstore.xt,
+	(cell)f_lit.xt,
+	(cell)1,
+	(cell)f_allot.xt,
+	(cell)f_exit.xt
+)
 /********************************/
-CWORD(NULL,"EMIT",f_emit)
+CWORD(&f_ccomma.link,"EMIT",f_emit)
 {
 	static char c=0;
 	c=pop();
@@ -301,7 +320,7 @@ cell refill(void)
 	len=l;
 	return l;
 }
-CWORD(NULL,"REFILL",f_refill)
+CWORD(&f_emit.link,"REFILL",f_refill)
 {
 	push(refill()?~0:0);
 	next();
@@ -312,7 +331,7 @@ char key(void)
 		refill();
 	return inbuf[in++];
 }
-CWORD(NULL,"KEY",f_key)
+CWORD(&f_refill.link,"KEY",f_key)
 {
 	push((cell)key());
 	next();
@@ -331,17 +350,22 @@ char *word(void)
 	wordbuf[0]=i;
 	return wordbuf;
 }
-CWORD(NULL,"WORD",f_word) {
+CWORD(&f_key.link,"WORD",f_word) {
 	push((cell)word());
 	next();
 }
+FORTHWORD(&f_word.link,"COUNT",f_count,
+	(cell)f_docol,
+	(cell)f_dup.xt,
+	(cell)f_incr.xt,
+	(cell)f_swap.xt,
+	(cell)f_cfetch.xt,
+	(cell)f_exit.xt
+)
 /********************************/
-#define CONSTANT(x) { push((cell)x); next(); }
 cell base=10;
-CWORD(NULL,"BASE",f_base) CONSTANT(&base)
-/********************************/
-//CWORD(NULL,">NUMBER",f_tonumber)
-void tonumber(void)
+CWORD(&f_count.link,"BASE",f_base) CONSTANT(&base)
+CWORD(&f_base.link,">NUMBER",f_tonumber)
 {
 	register cell l=pop();
 	register char *s=(char *)pop();
@@ -364,8 +388,7 @@ void tonumber(void)
 		}
 		if (d>b)
 			break;
-		n*=b;
-		n+=d;
+		n=n*b+d;
 		s++;
 		l--;
 	}
@@ -374,29 +397,61 @@ void tonumber(void)
 	push(n);
 	push((cell)s);
 	push(l);
-	//next();
+	next();
 }
 /********************************/
-FORTHWORD(NULL,"TEST",dub,
-	(cell)f_docol,
-	(cell)f_dup.xt,
-	(cell)f_add.xt,
-	(cell)f_exit.xt
-)
+link_t *latest;
+CWORD(&f_tonumber.link,"LATEST",f_latest) CONSTANT(&latest)
+link_t *find(char *cs)
+{
+	int len=cs[0];
+	cs++;
+	link_t *l=latest;
+	for (;l;l=l->prev) {
+		if (l->flags&F_HID)
+			continue;
+		if ((l->flags&~F_IMM)!=len)
+			continue;
+		for (int i=0;i<len;i++)
+			if (l->name[i]!=cs[i])
+				goto NEXT;
+		break;
+NEXT:		continue;
+	}
+	return l;
+}
+CWORD(&f_latest.link,"FIND",f_find)
+{
+	link_t *l=find((char *)pop());
+	push((cell)(&((ffunc_t *)l)[4]));
+	push(l->flags&F_IMM?1:-1);
+}
+CWORD(&f_find.link,"'",f_tick)
+{
+	link_t *l=find(word());
+	push((cell)(&((ffunc_t *)l)[4]));
+}
+link_t *latest=(link_t *)&f_tick.link;
+/********************************/
 FORTHWORD(NULL,"TEST",test,
 	(cell)f_docol,
-	(cell)f_literal.xt,
-	(cell)35,
-	(cell)dub.xt,
-	(cell)f_literal.xt,
-	(cell)7,
-	(cell)f_add.xt,
+	(cell)f_lit.xt,
+	(cell)0,
+	(cell)f_word.xt,
+	(cell)f_count.xt,
+	(cell)f_tonumber.xt,
+	(cell)f_drop.xt,
+	(cell)f_drop.xt,
 	(cell)f_emit.xt,
 	(cell)f_bye.xt
 )
 ffunc_t entry=(ffunc_t)test.xt;
 int main()//(int argc,char **argv)
 {
+	/*
 	ip=&entry;
 	next();
+	*/
+	printf("%p\n",find(word()));
+	return 0;
 }
