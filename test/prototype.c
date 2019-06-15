@@ -1,3 +1,20 @@
+/*
+ * Disclaimer: All of the following source code is horrifyingly arcane.
+ *
+ * I leveraged a lot of macros to trick the compiler,
+ * so it would form structures the way I need them,
+ * and I used a ton of typecasting to get rid of warnings.
+ *
+ * In some places, I wrote things in an ugly way for optimization.
+ * In fact, the code relies on the availability of TCO to function.
+ * (Don't expect this to work for long unless the compiler supports TCO!)
+ *
+ * I made this as a programming challenge to myself,
+ * to see how closely/portably I could emulate the assembly version.
+ * I do not need (or even want) to use or maintain this seriously,
+ * and this is not representative of my usual work.
+ */
+
 #define _DEFAULT_SOURCE
 #include <unistd.h>
 #include <stdint.h>
@@ -100,7 +117,24 @@ CWORD(&f_bye.link,"EXECUTE",f_execute)
 	(*f)();
 }
 /********************************/
-CWORD(&f_execute.link,"DUP",f_dup)
+CWORD(&f_execute.link,"BRANCH",f_branch)
+{
+	register cell o=(cell)*ip;
+	ip=(ffunc_t *)(&((char *)ip)[o]);
+	next();
+}
+CWORD(&f_branch.link,"0BRANCH",f_zbranch)
+{
+	register cell c=pop();
+	register cell o=(cell)*ip;
+	if (c)
+		ip=(ffunc_t *)(&((char *)ip)[o]);
+	else
+		ip=&ip[1];
+	next();
+}
+/********************************/
+CWORD(&f_zbranch.link,"DUP",f_dup)
 {
 	push(sp[-1]);
 	next();
@@ -268,7 +302,7 @@ void init_data_seg(void)
 CWORD(&f_latest.link,"ALLOT",f_allot)
 {
 	register cell i=pop();
-	here=&here[i];
+	here=(cell *)(&((char *)here)[i]);
 	next();
 }
 CWORD(&f_allot.link,"!",f_store)
@@ -327,7 +361,7 @@ static cell len=0;
 //static cell in=0; // (declared previously)
 //static cell sourceid=0; // (declared previously)
 cell refill(void)
-{ // refill inbuf with keyboard input
+{
 	register cell l=read(STDIN_FILENO,inbuf,255);
 	if (!l)
 		_exit(0);
@@ -342,9 +376,10 @@ CWORD(&f_emit.link,"REFILL",f_refill)
 	next();
 }
 char key(void)
-{ // push key value to stack
+{
 	if (in>=len)
-		refill();
+		if (!refill())
+			_exit(0);
 	return inbuf[in++];
 }
 CWORD(&f_refill.link,"KEY",f_key)
@@ -354,12 +389,10 @@ CWORD(&f_refill.link,"KEY",f_key)
 }
 static char wordbuf[255];
 char *word(void)
-{ // push counted address to stack
+{
 	register cell c,i=0;
-	for (;;) {
-		c=key();
-		if (c<=' ')
-			break;
+	while ((c=key())<=' ');
+	for (;c>' ';c=key()) {
 		i++;
 		wordbuf[i]=(char)c;
 	}
@@ -435,36 +468,29 @@ NEXT:		continue;
 CWORD(&f_tonumber.link,"FIND",f_find)
 {
 	link_t *l=find((char *)pop());
-	push((cell)(&((ffunc_t *)l)[4]));
+	push((cell)(&((ffunc_t *)l)[3]));
 	push(l->flags&F_IMM?1:-1);
+	next();
 }
 CWORD(&f_find.link,"'",f_tick)
 {
 	link_t *l=find(word());
-	push((cell)(&((ffunc_t *)l)[4]));
+	push((cell)(&((ffunc_t *)l)[3]));
+	next();
 }
 link_t *latest=(link_t *)&f_tick.link;
 /********************************/
 FORTHWORD(NULL,"TEST",test,
 	(cell)f_docol,
-	(cell)f_lit.xt,
-	(cell)0,
-	(cell)f_word.xt,
-	(cell)f_count.xt,
-	(cell)f_tonumber.xt,
-	(cell)f_drop.xt,
-	(cell)f_drop.xt,
-	(cell)f_emit.xt,
-	(cell)f_bye.xt
+	(cell)f_tick.xt,
+	(cell)f_execute.xt,
+	(cell)f_branch.xt,
+	(cell)-3*sizeof(cell)
 )
 ffunc_t entry=(ffunc_t)test.xt;
 int main()//(int argc,char **argv)
 {
-	/*
 	ip=&entry;
 	next();
-	*/
-	init_data_seg();
-	printf("%p\n",find(word()));
 	return 0;
 }
