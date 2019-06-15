@@ -1,18 +1,22 @@
 /*
  * Disclaimer: All of the following source code is horrifyingly arcane.
+ * This is not to be considered an official part of the project.
+ *
+ * I made this as a programming challenge to myself,
+ * to see how closely I could emulate the assembly version in C.
+ * I do not need (or even want) to use or maintain this seriously,
+ * and this is not representative of my usual work.
  *
  * I leveraged a lot of macros to trick the compiler,
- * so it would form structures the way I need them,
+ * so it would form link structures the way I need them,
  * and I used a ton of typecasting to get rid of warnings.
  *
  * In some places, I wrote things in an ugly way for optimization.
  * In fact, the code relies on the availability of TCO to function.
  * (Don't expect this to work for long unless the compiler supports TCO!)
  *
- * I made this as a programming challenge to myself,
- * to see how closely/portably I could emulate the assembly version.
- * I do not need (or even want) to use or maintain this seriously,
- * and this is not representative of my usual work.
+ * Also, this code breaks the strict aliasing rule _everywhere_.
+ * You have been warned; proceed at your own risk.
  */
 
 #define _DEFAULT_SOURCE
@@ -106,15 +110,10 @@ CWORD(&f_exit.link,"LIT",f_lit)
 	ip=&ip[1];
 	next();
 }
-CWORD(&f_lit.link,"BYE",f_bye)
+CWORD(&f_lit.link,"EXECUTE",f_execute)
 {
-	_exit(0);
-	next();
-}
-CWORD(&f_bye.link,"EXECUTE",f_execute)
-{
-	register ffunc_t *f=(ffunc_t *)pop();
-	(*f)();
+	xt=(ffunc_t *)pop();
+	(*xt)();
 }
 /********************************/
 CWORD(&f_execute.link,"BRANCH",f_branch)
@@ -125,12 +124,11 @@ CWORD(&f_execute.link,"BRANCH",f_branch)
 }
 CWORD(&f_branch.link,"0BRANCH",f_zbranch)
 {
-	register cell c=pop();
-	register cell o=(cell)*ip;
-	if (c)
-		ip=(ffunc_t *)(&((char *)ip)[o]);
-	else
-		ip=&ip[1];
+	if (!pop()) {
+		f_branch_c();
+		return;
+	}
+	ip=&ip[1];
 	next();
 }
 /********************************/
@@ -295,10 +293,6 @@ CWORD(&f_sourceid.link,">IN",f_in) CONSTANT(in)
 link_t *latest;
 CWORD(&f_in.link,"LATEST",f_latest) CONSTANT(&latest)
 /********************************/
-void init_data_seg(void)
-{
-	here=sbrk(4096*sizeof(cell));
-}
 CWORD(&f_latest.link,"ALLOT",f_allot)
 {
 	register cell i=pop();
@@ -392,14 +386,16 @@ char *word(void)
 {
 	register cell c,i=0;
 	while ((c=key())<=' ');
-	for (;c>' ';c=key()) {
+	while (c>' ') {
 		i++;
 		wordbuf[i]=(char)c;
+		c=key();
 	}
 	wordbuf[0]=i;
 	return wordbuf;
 }
-CWORD(&f_key.link,"WORD",f_word) {
+CWORD(&f_key.link,"WORD",f_word)
+{
 	push((cell)word());
 	next();
 }
@@ -418,11 +414,12 @@ CWORD(&f_count.link,">NUMBER",f_tonumber)
 	register char *s=(char *)pop();
 	register cell n=pop();
 	register cell b=base;
+	push(0);
 	if (*s=='-') {
 		s++;
-		push(-1);
-	} else
-		push(0);
+		l--;
+		sp[-1]=~sp[-1];
+	}
 	while (l>0) {
 		char d=*s;
 		d-='0';
@@ -467,9 +464,15 @@ NEXT:		continue;
 }
 CWORD(&f_tonumber.link,"FIND",f_find)
 {
-	link_t *l=find((char *)pop());
-	push((cell)(&((ffunc_t *)l)[3]));
-	push(l->flags&F_IMM?1:-1);
+	char *s=(char *)pop();
+	link_t *l=find(s);
+	if (l) {
+		push((cell)(&((ffunc_t *)l)[3]));
+		push(l->flags&F_IMM?1:-1);
+	} else {
+		push((cell)s);
+		push(0);
+	}
 	next();
 }
 CWORD(&f_find.link,"'",f_tick)
@@ -480,17 +483,48 @@ CWORD(&f_find.link,"'",f_tick)
 }
 link_t *latest=(link_t *)&f_tick.link;
 /********************************/
-FORTHWORD(NULL,"TEST",test,
+FORTHWORD(NULL,"",baseinterp,
+	(cell)f_docol,
+	(cell)f_word.xt,
+	(cell)f_find.xt,
+	(cell)f_zbranch.xt,
+	(cell)4*sizeof(cell),
+	(cell)f_execute.xt,
+	(cell)f_branch.xt,
+	(cell)-6*sizeof(cell),
+	(cell)f_lit.xt,
+	(cell)0,
+	(cell)f_swap.xt,
+	(cell)f_count.xt,
+	(cell)f_tonumber.xt,
+	(cell)f_zbranch.xt,
+	(cell)3*sizeof(cell),
+	(cell)f_branch.xt,
+	(cell)4*sizeof(cell),
+	(cell)f_drop.xt,
+	(cell)f_branch.xt,
+	(cell)-18*sizeof(cell),
+	(cell)f_drop.xt,
+	(cell)f_drop.xt,
+	(cell)f_lit.xt,
+	(cell)'?',
+	(cell)f_emit.xt,
+	(cell)f_branch.xt,
+	(cell)-25*sizeof(cell),
+)
+/*
+FORTHWORD(NULL,"",baseinterp,
 	(cell)f_docol,
 	(cell)f_tick.xt,
 	(cell)f_execute.xt,
 	(cell)f_branch.xt,
 	(cell)-3*sizeof(cell)
 )
-ffunc_t entry=(ffunc_t)test.xt;
+*/
+ffunc_t entry=(ffunc_t)baseinterp.xt;
 int main()//(int argc,char **argv)
 {
+	here=sbrk(4096*sizeof(cell));
 	ip=&entry;
 	next();
-	return 0;
 }
