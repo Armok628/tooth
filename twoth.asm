@@ -7,13 +7,13 @@
 %endmacro
 
 %macro RPUSH 1
-	add	rbp, 8
+	sub	rbp, 8
 	mov	qword [rbp], %1
 %endmacro
 
 %macro RPOP 1
 	mov	%1, qword [rbp]
-	sub	rbp, 8
+	add	rbp, 8
 %endmacro
 
 %define PREVLINK 0
@@ -68,12 +68,13 @@ SYS_FCNTL equ 72
 
 	section .bss
 
-ret_stack: resq 1024
+rstack: resq 1024
+R0:
 
 	section .text
 
 init_ret_stack:
-	mov	rbp, ret_stack
+	mov	rbp, R0
 	ret
 
 ;;;;;;; Basic FORTH primitives ;;;;;;;
@@ -593,7 +594,7 @@ syscall0:
 
 FORTHCONST HERE, "HERE", [here]
 FORTHCONST BUF_INDEX, ">IN", nextkey
-FORTHCONST R0, "R0", ret_stack
+FORTHCONST R0_CONST, "R0", R0
 FORTHCONST DOCOL_CONST, "DOCOL", DOCOL
 FORTHCONST S0_CONST, "S0", [S0]
 FORTHCONST SOURCE_ID, "SOURCE-ID", [sourceid]

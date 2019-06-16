@@ -350,10 +350,10 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 	THEN
 ; IMMEDIATE
 
-: I RP@ CELL - @ ;
-: I' RP@ 2 CELLS - @ ;
-: J RP@ 3 CELLS - @ ;
-: J' RP@ 4 CELLS - @ ;
+: I RP@ CELL+ @ ;
+: I' RP@ 2 CELLS + @ ;
+: J RP@ 3 CELLS + @ ;
+: J' RP@ 4 CELLS + @ ;
 
 32 CONSTANT BL
 : SPACE 32 EMIT ;

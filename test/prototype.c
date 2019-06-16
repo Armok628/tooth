@@ -37,7 +37,7 @@ typedef struct link_s {
 	cell flags;
 	char *name;
 } link_t;
-enum { F_IMM=0x80, F_HID=0x40 };
+enum {F_IMM=0x80,F_HID=0x40};
 typedef void (*ffunc_t)(void);
 #define COUNT(...) sizeof (cell []){__VA_ARGS__}/sizeof(cell)
 #define CWORD(last,name,cname) \
@@ -60,28 +60,30 @@ struct { \
 };
 /********************************/
 cell stack[1024];
-cell *sp=&stack[0];
+cell *sp=&stack[1024];
 cell rstack[1024];
-cell *rp=&rstack[0];
+cell *rp=&rstack[1024];
 static inline void push(cell a)
 {
+	sp=&sp[-1];
 	*sp=a;
-	sp=&sp[1];
 }
 static inline void rpush(cell a)
 {
+	rp=&rp[-1];
 	*rp=a;
-	rp=&rp[1];
 }
 static inline cell pop(void)
 {
-	sp=&sp[-1];
-	return *sp;
+	register cell r=sp[0];
+	sp=&sp[1];
+	return r;
 }
 static inline cell rpop(void)
 {
-	rp=&rp[-1];
-	return *rp;
+	register cell r=rp[0];
+	rp=&rp[1];
+	return r;
 }
 /********************************/
 ffunc_t *xt=NULL;
@@ -133,7 +135,7 @@ CWORD(&f_branch.link,"\0070BRANCH",f_zbranch)
 /********************************/
 CWORD(&f_zbranch.link,"\003DUP",f_dup)
 {
-	push(sp[-1]);
+	push(sp[0]);
 	next();
 }
 CWORD(&f_dup.link,"\004DROP",f_drop)
@@ -166,13 +168,13 @@ CWORD(&f_rot.link,"\004-ROT",f_unrot)
 }
 CWORD(&f_unrot.link,"\004OVER",f_over)
 {
-	push(sp[-2]);
+	push(sp[1]);
 	next();
 }
 CWORD(&f_over.link,"\003NIP",f_nip)
 {
 	register cell a=pop();
-	sp[-1]=a;
+	sp[0]=a;
 	next();
 }
 CWORD(&f_nip.link,"\004TUCK",f_tuck)
@@ -196,7 +198,7 @@ CWORD(&f_to_r.link,"\002R>",f_from_r)
 }
 CWORD(&f_from_r.link,"\002R@",f_r_fetch)
 {
-	push(rp[-1]);
+	push(rp[0]);
 	next();
 }
 /********************************/
@@ -224,7 +226,7 @@ CWORD(&f_rp_fetch.link,"\003RP!",f_rp_store)
 #define OP2(op) \
 { \
 	register cell b=pop(); \
-	sp[-1] op##= b; \
+	sp[0] op##= b; \
 	next(); \
 }
 CWORD(&f_rp_store.link,"\001+",f_add) OP2(+)
@@ -237,25 +239,25 @@ CWORD(&f_xor.link,"\006LSHIFT",f_shl) OP2(<<)
 CWORD(&f_shl.link,"\006RSHIFT",f_shr) OP2(>>)
 CWORD(&f_shr.link,"\004/MOD",f_divmod)
 {
-	register cell q=sp[-2]/sp[-1];
-	register cell m=sp[-2]%sp[-1];
-	sp[-2]=m;
-	sp[-1]=q;
+	register cell q=sp[1]/sp[0];
+	register cell m=sp[1]%sp[0];
+	sp[1]=m;
+	sp[0]=q;
 	next();
 }
 CWORD(&f_divmod.link,"\0021+",f_incr)
-{ sp[-1]++; next(); }
+{ sp[0]++; next(); }
 CWORD(&f_incr.link,"\0021-",f_decr)
-{ sp[-1]--; next(); }
+{ sp[0]--; next(); }
 CWORD(&f_decr.link,"\006NEGATE",f_negate)
-{ sp[-1]=-sp[-1]; next(); }
+{ sp[0]=-sp[0]; next(); }
 CWORD(&f_negate.link,"\006INVERT",f_invert)
-{ sp[-1]=~sp[-1]; next(); }
+{ sp[0]=~sp[0]; next(); }
 /********************************/
 #define CMPOP(op) \
 { \
 	register cell b=pop(); \
-	sp[-1]=sp[-1] op b?~0:0; \
+	sp[0]=sp[0] op b?~0:0; \
 	next(); \
 }
 CWORD(&f_invert.link,"\001=",f_eq) CMPOP(==)
@@ -267,7 +269,7 @@ CWORD(&f_lte.link,"\002<>",f_neq) CMPOP(!=)
 #define UCMPOP(op) \
 { \
 	register ucell b=(ucell)pop(); \
-	sp[-1]=(ucell)sp[-1] op b?~0:0; \
+	sp[0]=(ucell)sp[0] op b?~0:0; \
 	next(); \
 }
 CWORD(&f_neq.link,"\002U<",f_ult) UCMPOP(<)
@@ -418,7 +420,7 @@ CWORD(&f_count.link,"\007>NUMBER",f_tonumber)
 	if (*s=='-') {
 		s++;
 		l--;
-		sp[-1]=~sp[-1];
+		sp[0]=~sp[0];
 	}
 	while (l>0) {
 		char d=*s;
