@@ -19,3 +19,20 @@
 
 : test_>link >LINK 2 CELLS + @ COUNT LENMASK AND TYPE ;
 ( ^ prints name associated with xt )
+
+: prime?
+	DUP 1 < IF
+		DROP FALSE EXIT
+	ELSE DUP 4 < IF
+		DROP TRUE EXIT
+	ELSE DUP 1 AND 0= IF
+		DROP FALSE EXIT
+	THEN THEN THEN
+	DUP 3 / 3 ?DO
+		DUP I MOD 0= IF
+			UNLOOP
+			DROP FALSE EXIT
+		THEN
+	2 +LOOP
+	DROP TRUE
+;

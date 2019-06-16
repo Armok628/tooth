@@ -195,7 +195,11 @@ HEADER : DOCOL , ] HEADER DOCOL , ] EXIT [
 : 0<= 0 <= ;
 : 0>= 0 >= ;
 : 0= 0 = ;
-: 0<> 0 <> ;
+: 0<> ; IMMEDIATE
+
+: TRUE -1 ;
+: FALSE 0 ;
+: NOT 0= ;
 
 : CELL+ CELL + ;
 : CELLS CELL * ;
