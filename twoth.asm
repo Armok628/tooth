@@ -384,6 +384,7 @@ ASMWORD SOURCE, "SOURCE" ; ( -- addr u )
 ASMWORD EVALUATE, "EVALUATE" ; ( addr u -- )
 	pop	qword [keycount]
 	pop	qword [inputbuf]
+	mov	qword [sourceid], -1
 	NEXT
 
 ASMWORD REFILL, "REFILL" ; ( -- err )

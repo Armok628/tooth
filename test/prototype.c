@@ -291,7 +291,7 @@ CWORD(&f_base.link,"\005DOCOL",f_docol_ptr) CONSTANT(f_docol)
 cell sourceid=0;
 CWORD(&f_docol_ptr.link,"\011SOURCE-ID",f_sourceid) CONSTANT(sourceid)
 cell in=0;
-CWORD(&f_sourceid.link,"\003>IN",f_in) CONSTANT(in)
+CWORD(&f_sourceid.link,"\003>IN",f_in) CONSTANT(&in)
 link_t *latest;
 CWORD(&f_in.link,"\006LATEST",f_latest) CONSTANT(&latest)
 /********************************/
@@ -353,9 +353,23 @@ CWORD(&f_ccomma.link,"\004EMIT",f_emit)
 }
 /********************************/
 static char inbuf[255];
+static char *source=inbuf;
 static cell len=0;
 //static cell in=0; // (declared previously)
 //static cell sourceid=0; // (declared previously)
+CWORD(&f_emit.link,"\010EVALUATE",f_evaluate)
+{
+	len=pop();
+	source=(char *)pop();
+	sourceid=-1;
+	next();
+}
+CWORD(&f_evaluate.link,"\006SOURCE",f_source)
+{
+	push((cell)*source);
+	push(len);
+	next();
+}
 cell refill(void)
 {
 	register cell l=read(STDIN_FILENO,inbuf,255);
@@ -363,10 +377,11 @@ cell refill(void)
 		_exit(0);
 	in=0;
 	len=l;
+	source=inbuf;
 	sourceid=0;
 	return l;
 }
-CWORD(&f_emit.link,"\006REFILL",f_refill)
+CWORD(&f_source.link,"\006REFILL",f_refill)
 {
 	push(refill()?~0:0);
 	next();
@@ -376,7 +391,7 @@ char key(void)
 	if (in>=len)
 		if (!refill())
 			_exit(0);
-	return inbuf[in++];
+	return source[in++];
 }
 CWORD(&f_refill.link,"\003KEY",f_key)
 {
