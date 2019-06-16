@@ -67,25 +67,22 @@ SYS_FCNTL equ 72
 ;;;;;;; Return stack setup ;;;;;;;
 
 	section .bss
-
 rstack: resq 1024
 R0:
 
 	section .text
-
 init_ret_stack:
 	mov	rbp, R0
 	ret
 
 ;;;;;;; Basic FORTH primitives ;;;;;;;
 
-	section .text
-
 ; RSP = Stack (manip. with push/pop)
 ; RBP = Return stack (manip. with RPUSH/RPOP)
 ; RBX = Next execution token (callee-saved register)
 ; RAX = This execution token (volatile register)
 
+	section .text
 DOCOL: ; Not a "real" FORTH word, per se
 	RPUSH	rbx
 	lea	rbx, [rax+8]
@@ -109,18 +106,15 @@ ASMWORD EXECUTE, "EXECUTE"
 ASMWORD	DUP, "DUP" ; ( a -- a a )
 	push	qword [rsp]
 	NEXT
-
 ASMWORD	DROP, "DROP" ; ( a -- )
 	add	rsp, 8
 	NEXT
-
 ASMWORD SWAP, "SWAP" ; ( a b -- b a )
 	pop	rdi ; b
 	pop	rsi ; a
 	push	rdi ; b
 	push	rsi ; a
 	NEXT
-
 ASMWORD ROT, "ROT" ; ( a b c -- b c a )
 	pop	rdi ; c
 	pop	rsi ; b
@@ -138,15 +132,12 @@ ASMWORD UNROT, "-ROT" ; ( a b c -- c a b )
 	push	rdx ; a
 	push	rsi ; b
 	NEXT
-
 ASMWORD OVER, "OVER" ; ( a b -- a b a )
 	push	qword [rsp+8]
 	NEXT
-
 ASMWORD NIP, "NIP" ; ( a b -- b )
 	pop	qword [rsp]
 	NEXT
-
 ASMWORD TUCK, "TUCK" ; (a b -- b a b)
 	pop	rdi ; b
 	pop	rsi ; a
@@ -161,12 +152,10 @@ ASMWORD TO_R, ">R"
 	pop	rax
 	RPUSH	rax
 	NEXT
-
 ASMWORD FROM_R, "R>"
 	RPOP	rax
 	push	rax
 	NEXT
-
 ASMWORD RFETCH, "R@"
 	push	qword [rbp]
 	NEXT
@@ -176,37 +165,45 @@ ASMWORD RFETCH, "R@"
 ASMWORD RSPFETCH, "SP@"
 	push	rsp
 	NEXT
-
 ASMWORD RSPSTORE, "SP!"
 	pop	rsp
 	NEXT
-
 ASMWORD RBPFETCH, "RP@"
 	push	rbp
 	NEXT
-
 ASMWORD RBPSTORE, "RP!"
 	pop	rbp
 	NEXT
 
 ;;;;;;; Math operations ;;;;;;;
 
-ASMWORD	ADD, "+" ; ( a b -- a+b)
+%macro OPWORD2 3
+ASMWORD %1, %2
 	pop	rax
-	add	[rsp], rax
+	%3	qword [rsp], rax
 	NEXT
+%endmacro
+%macro OPWORD1 3
+ASMWORD %1, %2
+	%3	qword [rsp]
+	NEXT
+%endmacro
 
-ASMWORD	SUB, "-" ; ( a b -- a-b )
-	pop	rax
-	sub	[rsp], rax
-	NEXT
+OPWORD2	ADD, "+", add ; ( a b -- a+b)
+OPWORD2	SUB, "-", sub ; ( a b -- a-b )
+OPWORD2	AND, "AND", and ; ( a b -- a&b )
+OPWORD2	OR, "OR", or ; ( a b -- a|b )
+OPWORD2	XOR, "XOR", xor ; ( a b -- a^b )
+OPWORD1	INCR, "1+", inc ; ( a -- a+1 )
+OPWORD1 DECR, "1-", dec ; ( a -- a-1 )
+OPWORD1 NEGATE, "NEGATE", neg ; ( x -- -x )
+OPWORD1 INVERT, "INVERT", not ; ( x -- ~x )
 
 ASMWORD MUL, "*" ; ( a b -- a*b )
 	pop	rax
 	imul	qword [rsp]
 	mov	qword [rsp], rax
 	NEXT
-
 ASMWORD DIVMOD, "/MOD" ; ( a b -- a%b a/b )
 	mov	rax, [rsp+8]
 	xor	rdx, rdx
@@ -215,45 +212,13 @@ ASMWORD DIVMOD, "/MOD" ; ( a b -- a%b a/b )
 	mov	qword [rsp], rax
 	NEXT
 
-ASMWORD AND, "AND" ; ( a b -- a&b )
-	pop	rax
-	and	qword [rsp], rax
-	NEXT
-
-ASMWORD OR, "OR" ; ( a b -- a|b )
-	pop	rax
-	or	qword [rsp], rax
-	NEXT
-
-ASMWORD XOR, "XOR" ; ( a b -- a^b )
-	pop	rax
-	xor	qword [rsp], rax
-	NEXT
-
 ASMWORD LSHIFT, "LSHIFT"
 	pop	rcx
 	shl	qword [rsp], cl
 	NEXT
-
 ASMWORD RSHIFT, "RSHIFT"
 	pop	rcx
 	shr	qword [rsp], cl
-	NEXT
-
-ASMWORD INCR, "1+"
-	inc	qword [rsp]
-	NEXT
-
-ASMWORD DECR, "1-"
-	dec	qword [rsp]
-	NEXT
-
-ASMWORD NEGATE, "NEGATE" ; ( x -- -x )
-	neg	qword [rsp]
-	NEXT
-
-ASMWORD INVERT, "INVERT" ; ( x -- ~x )
-	not	qword [rsp]
 	NEXT
 
 ;;;;;;; Comparisons ;;;;;;;
@@ -290,7 +255,6 @@ ASMWORD STORE, "!" ; ( qword addr -- )
 	pop	rdi
 	pop	qword [rdi]
 	NEXT
-
 ASMWORD FETCH, "@" ; ( addr -- qword )
 	pop	rsi
 	push	qword [rsi]
@@ -301,7 +265,6 @@ ASMWORD CSTORE, "C!" ; ( byte addr -- )
 	pop	rax
 	mov	byte [rdi], al
 	NEXT
-
 ASMWORD CFETCH, "C@" ; ( addr -- byte )
 	pop	rsi
 	movzx	eax, byte [rsi]
@@ -317,13 +280,11 @@ ASMWORD ALLOT, "ALLOT"
 
 FORTHWORD COMMA, ","
 dq	DOCOL, HERE, STORE, CELL, ALLOT, EXIT
-
 FORTHWORD CCOMMA, "C,"
 dq	DOCOL, HERE, CSTORE, LIT, 1, ALLOT, EXIT
 
 FORTHWORD ALIGNED, "ALIGNED"
 dq	DOCOL, DECR, CELL, DECR, INVERT, AND, CELL, ADD, EXIT
-
 FORTHWORD ALIGN, "ALIGN"
 dq	DOCOL, HERE, DUP, ALIGNED, SUB, NEGATE, ALLOT, EXIT
 
@@ -332,7 +293,6 @@ dq	DOCOL, HERE, DUP, ALIGNED, SUB, NEGATE, ALLOT, EXIT
 ASMWORD BRANCH, "BRANCH"
 	add	rbx, qword [rbx]
 	NEXT
-
 ASMWORD ZBRANCH, "0BRANCH"
 	pop	rax
 	test	rax, rax
@@ -343,11 +303,9 @@ ASMWORD ZBRANCH, "0BRANCH"
 ;;;;;;; Output ;;;;;;;
 
 	section .bss
-
 charbuf: resb 1
 
 	section .text
-
 ASMWORD	EMIT, "EMIT"
 	pop	rax
 	mov	rsi, charbuf
@@ -363,7 +321,6 @@ ASMWORD	EMIT, "EMIT"
 BUFSIZE equ 256
 
 	section .data
-
 termbuf: times BUFSIZE db 0
 keycount: dq 0 ; fetch with SOURCE
 nextkey: dq 0 ; fetch with >IN
@@ -375,7 +332,6 @@ sourceid: dq 0 ; fetch with SOURCE-ID
 base: dq 10 ; fetch address with BASE
 
 	section .text
-
 ASMWORD SOURCE, "SOURCE" ; ( -- addr u )
 	push	qword [inputbuf]
 	push	qword [keycount]
@@ -613,10 +569,9 @@ last_link: dq PREVLINK
 
 ;;;;;;; Data segment setup ;;;;;;;
 
-	section .text
-
 DATA_SEG_SIZE equ 1024*64
 
+	section .text
 init_data_seg: ; here=brk(0); brk(here+DATA_SEG_SIZE);
 	xor	rdi, rdi
 	mov	rax, SYS_BRK
@@ -641,7 +596,6 @@ dq	DOCOL, $WORD, FIND, ZBRANCH, 4*8, EXECUTE, BRANCH, -6*8, \
 ;;;;;;; Executable entry point ;;;;;;;
 
 	section .text
-
 	global _start
 _start:
 	cld
@@ -652,6 +606,5 @@ _start:
 	NEXT
 
 	section .rodata
-
 entry_point:
 	dq	baseinterp
