@@ -237,9 +237,10 @@ CWORD(&f_xor.link,"\006LSHIFT",f_shl) OP2(<<)
 CWORD(&f_shl.link,"\006RSHIFT",f_shr) OP2(>>)
 CWORD(&f_shr.link,"\004/MOD",f_divmod)
 {
-	register cell b=sp[-2],a=sp[-1];
-	sp[-2]=a%b;
-	sp[-1]=a/b;
+	register cell q=sp[-2]/sp[-1];
+	register cell m=sp[-2]%sp[-1];
+	sp[-2]=m;
+	sp[-1]=q;
 	next();
 }
 CWORD(&f_divmod.link,"\0021+",f_incr)
