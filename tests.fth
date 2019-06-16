@@ -21,7 +21,7 @@
 ( ^ prints name associated with xt )
 
 : prime?
-	DUP 1 < IF
+	DUP 2 < IF
 		DROP FALSE EXIT
 	ELSE DUP 4 < IF
 		DROP TRUE EXIT
