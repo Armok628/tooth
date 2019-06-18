@@ -104,7 +104,9 @@ ASMWORD EXECUTE, "EXECUTE"
 ;;;;;;; Stack manipulation ;;;;;;;
 
 ASMWORD	DUP, "DUP" ; ( a -- a a )
-	push	qword [rsp]
+	pop	rax
+	push	rax
+	push	rax
 	NEXT
 ASMWORD	DROP, "DROP" ; ( a -- )
 	add	rsp, 8
@@ -133,10 +135,16 @@ ASMWORD UNROT, "-ROT" ; ( a b c -- c a b )
 	push	rsi ; b
 	NEXT
 ASMWORD OVER, "OVER" ; ( a b -- a b a )
-	push	qword [rsp+8]
+	pop	rcx
+	pop	rax
+	push	rax
+	push	rcx
+	push	rax
 	NEXT
 ASMWORD NIP, "NIP" ; ( a b -- b )
-	pop	qword [rsp]
+	pop	rcx
+	pop	rax
+	push	rcx
 	NEXT
 ASMWORD TUCK, "TUCK" ; (a b -- b a b)
 	pop	rdi ; b
@@ -187,13 +195,17 @@ ASMWORD IPSTORE, "IP!"
 
 %macro OPWORD2 3
 ASMWORD %1, %2
+	pop	rcx
 	pop	rax
-	%3	qword [rsp], rax
+	%3	rax, rcx
+	push	rax
 	NEXT
 %endmacro
 %macro OPWORD1 3
 ASMWORD %1, %2
-	%3	qword [rsp]
+	pop	rax
+	%3	rax
+	push	rax
 	NEXT
 %endmacro
 
@@ -208,42 +220,45 @@ OPWORD1 NEGATE, "NEGATE", neg ; ( x -- -x )
 OPWORD1 INVERT, "INVERT", not ; ( x -- ~x )
 
 ASMWORD MUL, "*" ; ( a b -- a*b )
+	pop	rcx
 	pop	rax
-	imul	qword [rsp]
-	mov	qword [rsp], rax
+	mul	rcx
+	push	rax
 	NEXT
 ASMWORD DIVMOD, "/MOD" ; ( a b -- a%b a/b )
-	mov	rax, [rsp+8]
+	pop	rcx
+	pop	rax
 	xor	rdx, rdx
-	div	qword [rsp]
-	mov	qword [rsp+8], rdx
-	mov	qword [rsp], rax
+	div	rcx
+	push	rdx
+	push	rax
 	NEXT
 
 ASMWORD LSHIFT, "LSHIFT"
 	pop	rcx
-	shl	qword [rsp], cl
+	pop	rax
+	shl	rax, cl
+	push	rax
 	NEXT
 ASMWORD RSHIFT, "RSHIFT"
 	pop	rcx
-	shr	qword [rsp], cl
+	pop	rax
+	shr	rax, cl
+	push	rax
 	NEXT
 
 ;;;;;;; Comparisons ;;;;;;;
 
-SET_TOS_TRUE:
-	mov	qword [rsp], ~0
-	NEXT
-SET_TOS_FALSE:
-	mov	qword [rsp], 0
-	NEXT
-
 %macro CMPWORD 3
 ASMWORD %1, %2
+	pop	rcx
 	pop	rax
-	cmp	qword [rsp], rax
-	%3	SET_TOS_TRUE
-	jmp	SET_TOS_FALSE
+	cmp	rax, rcx
+	%3	.true
+.false:	push	qword 0
+	NEXT
+.true:	push	qword ~0
+	NEXT
 %endmacro
 
 CMPWORD EQ, "=", je
@@ -466,14 +481,15 @@ ASMWORD TONUMBER, ">NUMBER" ; ( n str u -- n str err )
 ;;;;;;; "Finding" words ;;;;;;;
 
 ASMWORD FIND, "FIND" ; ( ctstr -- ctstr 0 | xt +/-1 )
-	mov	rsi, qword [rsp]		; get counted string
+	pop	rsi				; get counted string
 	call	_FIND				; load entry into rax
 	test	rcx, rcx			; test error
 	jz	.notfound			; if no error:
-	mov	qword [rsp], rax		; replace counted string with xt
+	push	rax				; push xt
 	push	rcx				; push find code (+/-1)
 	NEXT
 .notfound:					; else:
+	push	rsi				; push counted string
 	push	rcx				; push find code (0)
 	NEXT
 _FIND: ; rsi=ctstr => rsi=ctstr, rax=entry, rcx=-1|0|1, rdx=ctstrlen
@@ -504,10 +520,12 @@ _FIND: ; rsi=ctstr => rsi=ctstr, rax=entry, rcx=-1|0|1, rdx=ctstrlen
 	neg	rcx				; else set error to -1 (found)
 .imm:
 	add	rax, 24				; load xt into rax
+	dec	rsi				; restore counted string
 	ret					; return
 .undef:						; if not found:
 	xor	rax, rax			; set entry to 0
 	xor	rcx, rcx			; set error to 0 (not found)
+	dec	rsi				; restore counted string
 	ret
 
 ASMWORD TICK, "'"
