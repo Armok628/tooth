@@ -115,7 +115,7 @@ POSTPONE			implemented in Forth
 QUIT				implemented in Forth
 R>				implemented in assembly
 R@				implemented in assembly
-RECURSE				planned in Forth
+RECURSE				planned in Forth ( : LATEST @ >XT , ; IMMEDIATE )
 REPEAT				implemented in Forth
 ROT				implemented in assembly
 RSHIFT				implemented in assembly
@@ -174,7 +174,7 @@ HEX				implemented in Forth
 HOLDS			(???)	unplanned as of yet
 IS				planned in Forth
 MARKER				planned in Forth
-NIP				planned in Forth
+NIP				implemented in assembly
 OF				planned in Forth
 PAD				planned in Forth
 PARSE			(???)	planned in Forth (better as `repne scasb`?)
@@ -188,7 +188,7 @@ SAVE-INPUT		(???)	unplanned as of yet
 SOURCE-ID			implemented in assembly (indirect constant)
 TO			(???)	unplanned as of yet
 TRUE				planned in Forth ( : TRUE -1 ; )
-TUCK				planned in Forth
+TUCK				implemented in assembly
 U.R				planned in Forth
 U>				implemented in assembly
 UNUSED				planned in Forth ( : UNUSED HERE SYS_BRK 0 SYSCALL1 - ; )

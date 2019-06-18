@@ -160,19 +160,27 @@ ASMWORD RFETCH, "R@"
 	push	qword [rbp]
 	NEXT
 
-;;;;;;; Direct stack manipulation ;;;;;;;
+;;;;;;; Direct state manipulation ;;;;;;;
 
-ASMWORD RSPFETCH, "SP@"
+ASMWORD SPFETCH, "SP@"
 	push	rsp
 	NEXT
-ASMWORD RSPSTORE, "SP!"
+ASMWORD SPSTORE, "SP!"
 	pop	rsp
 	NEXT
-ASMWORD RBPFETCH, "RP@"
+
+ASMWORD RPFETCH, "RP@"
 	push	rbp
 	NEXT
-ASMWORD RBPSTORE, "RP!"
+ASMWORD RPSTORE, "RP!"
 	pop	rbp
+	NEXT
+
+ASMWORD IPFETCH, "IP@"
+	push	rbx
+	NEXT
+ASMWORD IPSTORE, "IP!"
+	pop	rbx
 	NEXT
 
 ;;;;;;; Math operations ;;;;;;;
@@ -583,9 +591,6 @@ init_data_seg: ; here=brk(0); brk(here+DATA_SEG_SIZE);
 	ret
 
 ;;;;;;; Base interpreter code ;;;;;;;
-
-; effectively:
-; BEGIN WORD FIND IF EXECUTE ELSE >NUMBER IF DROP DROP [CHAR] ? EMIT ELSE DROP THEN THEN AGAIN
 
 FORTHWORD baseinterp, ""
 dq	DOCOL, $WORD, FIND, ZBRANCH, 4*8, EXECUTE, BRANCH, -6*8, \
