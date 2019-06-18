@@ -319,7 +319,7 @@ CWORD(&f_emit.link,"\010EVALUATE",f_evaluate) {
 	next();
 }
 CWORD(&f_evaluate.link,"\006SOURCE",f_source) {
-	push((cell)*source);
+	push((cell)source);
 	push(len);
 	next();
 }
