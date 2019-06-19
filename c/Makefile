@@ -1,7 +1,6 @@
 CC=clang
-CFLAGS=-g -O3 -std=c99 -Wall -Wextra -Wpedantic
-prot:
-	$(CC) $(CFLAGS) prototype.c
-
+CFLAGS=-g -O2 -std=c89 -Wall -Wextra -Wpedantic
 cps:
 	$(CC) $(CFLAGS) cpstest.c
+prot:
+	$(CC) $(CFLAGS) prototype.c
