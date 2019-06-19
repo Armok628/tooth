@@ -9,8 +9,8 @@ typedef int16_t cell;
 #endif
 /******** VM instructions ********/
 typedef void (*func)();
-#define push(sp,val) (*(++sp)=(cell)(val))
-#define pop(sp) (*(sp--))
+#define push(sp,val) (*(--sp)=(cell)(val))
+#define pop(sp) (*(sp++))
 void next(func *ip,cell *sp,cell *rp)
 {
 	(*ip)(ip+1,sp,rp);
@@ -36,6 +36,13 @@ void f_bye(func *ip,cell *sp,cell *rp)
 	_exit(pop(sp));
 	next(ip,sp,rp);
 }
+void f_execute(func *ip,cell *sp,cell *rp)
+{
+	push(rp,ip);
+	ip=(func *)pop(sp);
+	next(ip,sp,rp);
+}
+/******** Arithmetic ********/
 #define F_2OP(name,op) \
 void name(func *ip,cell *sp,cell *rp) \
 { \
@@ -56,11 +63,11 @@ void f_divmod(func *ip,cell *sp,cell *rp)
 /******** Entry ********/
 #define LIT(n) f_lit,(func)n
 func f_oneplus[]={LIT(1),f_add,f_exit};
-func prog[]={LIT(2),f_docol,(func)f_oneplus,f_bye};
+func prog[]={LIT(2),LIT(f_oneplus),f_execute,f_bye};
 cell stack[1024];
 cell rstack[1024];
 int main()/*(int argc,char *argv[])*/
 {
-	next(prog,stack,rstack);
+	next(prog,&stack[1024],&rstack[1024]);
 	return 0;
 }
