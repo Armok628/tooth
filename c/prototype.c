@@ -23,6 +23,9 @@ typedef struct link_s {
 	char *name;
 } link_t;
 
+/* For C89, need to manually define bool */
+typedef enum {false,true} bool;
+
 /*
  * 		CWORD macro
  * Used to define words in C visible to the system.
@@ -384,19 +387,18 @@ CWORD(&f_word.link,7,"\007>NUMBER",to_number)
 	char *str=(char *)pop(sp);
 	cell_t tot=pop(sp);
 	cell_t b=base;
-	unsigned int neg=str[0]=='-';
+	/* Better standards conformance will need switch (str[0]) */
+	/* This is good enough for now. */
+	bool neg=str[0]=='-';
 	str+=neg;
 	len-=neg;
 	while (len>0) {
 		char d=str[0];
 		d-='0';
-		if (d<0)
-			break;
-		else if (d>10) {
+		if (d>9)
 			d-='A'-'0'-10;
-			if (d<0||d>b)
-				break;
-		}
+		if (d<0||d>b)
+			break;
 		tot=tot*b+d;
 		++str;
 		--len;
@@ -406,7 +408,6 @@ CWORD(&f_word.link,7,"\007>NUMBER",to_number)
 	push(sp,tot);
 	push(sp,str);
 	push(sp,len);
-	return; /*******************/
 	next(ip,sp,rp);
 }
 
@@ -445,16 +446,6 @@ cell_t stack[1024];
 cell_t rstack[1024];
 int main()/*(int argc,char *argv[])*/
 {
-	/*
 	next(X(prog),ENDOF(stack),ENDOF(rstack));
-	*/
-	cell_t *sp=ENDOF(stack),*rp=ENDOF(rstack);
-	char *s=word();
-	int l=s[0];
-	s++;
-	push(sp,0);
-	push(sp,s);
-	push(sp,l);
-	f_to_number_c(NULL,sp,rp);
-	return sp[2];
+	return 0;
 }
