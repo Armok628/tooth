@@ -164,15 +164,90 @@ CWORD(&f_branch.link,7,"\0070BRANCH",zbranch)
 	next(ip,sp,rp);
 }
 
+/*________ Parameter Stack Manipulation ________*/
+
+CWORD(&f_zbranch.link,3,"\003DUP",dup)
+{
+	sp--;
+	sp[0]=sp[1];
+	next(ip,sp,rp);
+}
+CWORD(&f_dup.link,4,"\004DROP",drop)
+{
+	next(ip,sp+1,rp);
+}
+CWORD(&f_drop.link,4,"\004SWAP",swap)
+{
+	register cell_t a=sp[1],b=sp[0];
+	sp[1]=b;
+	sp[0]=a;
+	next(ip,sp,rp);
+}
+CWORD(&f_swap.link,3,"\003ROT",rot)
+{
+	register cell_t a=sp[2],b=sp[1],c=sp[0];
+	sp[2]=b;
+	sp[1]=c;
+	sp[0]=a;
+	next(ip,sp,rp);
+}
+
+CWORD(&f_rot.link,3,"\003NIP",nip)
+{
+	sp[1]=sp[0];
+	next(ip,sp+1,rp);
+}
+CWORD(&f_nip.link,4,"\004TUCK",tuck)
+{
+	register cell_t a=sp[1],b=sp[0];
+	sp--;
+	sp[2]=b;
+	sp[1]=a;
+	sp[0]=b;
+	next(ip,sp,rp);
+}
+CWORD(&f_tuck.link,4,"\004OVER",over)
+{
+	sp--;
+	sp[0]=sp[2];
+	next(ip,sp,rp);
+}
+CWORD(&f_over.link,4,"\004-ROT",unrot)
+{
+	register cell_t a=sp[2],b=sp[1],c=sp[0];
+	sp[2]=c;
+	sp[1]=a;
+	sp[0]=b;
+	next(ip,sp,rp);
+}
+
+/*________ Return Stack Manipulation ________*/
+
+
+CWORD(&f_unrot.link,2,"\002R@",rfetch)
+{
+	push(sp,rp[0]);
+	next(ip,sp,rp);
+}
+CWORD(&f_rfetch.link,2,"\002>R",to_r)
+{
+	push(rp,pop(sp));
+	next(ip,sp,rp);
+}
+CWORD(&f_to_r.link,2,"\002R>",r_from)
+{
+	push(sp,pop(rp));
+	next(ip,sp,rp);
+}
+
 /*________ Arithmetic ________*/
 
-#define F_2OP(op) \
-{ \
+#define F_2OP(op) { \
 	register cell_t b=pop(sp),a=pop(sp); \
 	push(sp,a op b); \
 	next(ip,sp,rp); \
 }
-CWORD(&f_zbranch.link,1,"\001+",add)
+CWORD(&f_r_from.link,1,"\001+",add)
 	F_2OP(+)
 CWORD(&f_add.link,1,"\001-",sub)
 	F_2OP(-)
@@ -198,8 +273,7 @@ CWORD(&f_rshift.link,4,"\004/MOD",divmod)
 
 /*________ Comparisons  ________*/
 
-#define F_CMP(op,t) \
-{ \
+#define F_CMP(op,t) { \
 	register t b=pop(sp),a=pop(sp); \
 	push(sp,a op b?~0:0); \
 	next(ip,sp,rp); \
@@ -227,38 +301,114 @@ CWORD(&f_ugt.link,3,"\003U<=",ulte)
 CWORD(&f_ulte.link,3,"\003U>=",ugte)
 	F_CMP(>=,ucell_t)
 
+/*________ I/O ________*/
+
+CWORD(&f_ugte.link,4,"\004EMIT",emit)
+{
+	static char b;
+	b=pop(sp);
+	write(STDOUT_FILENO,&b,1);
+	next(ip,sp,rp);
+}
+
+#define TIB_SIZE (1<<8)
+char tib[TIB_SIZE];
+char *source=tib;
+cell_t source_id=0;
+size_t nextkey;
+size_t keycount;
+
+CWORD(&f_ugte.link,8,"\010EVALUATE",evaluate)
+{
+	keycount=(size_t)pop(sp);
+	source=(char *)pop(sp);
+	nextkey=0;
+	source_id=~0;
+	next(ip,sp,rp);
+}
+CWORD(&f_evaluate.link,6,"\006SOURCE",source)
+{
+	push(sp,source);
+	push(sp,keycount);
+	next(ip,sp,rp);
+}
+
+size_t refill(void)
+{
+	nextkey=0;
+	source=tib;
+	source_id=0;
+	keycount=read(STDIN_FILENO,tib,TIB_SIZE);
+	return keycount;
+}
+CWORD(&f_source.link,6,"\006REFILL",refill)
+{
+	push(sp,refill());
+	next(ip,sp,rp);
+}
+char key(void)
+{
+	if (nextkey>=keycount)
+		if (!refill())
+			_exit(0);
+	return source[nextkey++];
+}
+CWORD(&f_refill.link,3,"\003KEY",key)
+{
+	push(sp,key());
+	next(ip,sp,rp);
+}
+#define WORDBUF_SIZE (1<<6)
+char *word(void)
+{
+	static char wordbuf[WORDBUF_SIZE];
+	int i=0;
+	char c=key();
+	while (c>' ') {
+		wordbuf[++i]=c;
+		c=key();
+	}
+	wordbuf[0]=i;
+	return wordbuf;
+}
+CWORD(&f_key.link,4,"\004WORD",word)
+{
+	push(sp,word());
+	next(ip,sp,rp);
+}
+
 /*________ Constants ________*/
 
-#define F_CONST(val) \
-{ \
+#define F_CONST(val) { \
 	push(sp,val); \
 	next(ip,sp,rp); \
 }
 
-CWORD(&f_ugte.link,4,"\004CELL",cell)
+CWORD(&f_word.link,4,"\004CELL",cell)
 	F_CONST(sizeof(cell_t))
+CWORD(&f_cell.link,3,"\003>IN",in)
+	F_CONST(&nextkey)
+CWORD(&f_in.link,9,"\011SOURCE-ID",source_id)
+	F_CONST(source_id)
 
 /*________ Entry ________*/
 
 #define F(x) (func_t)(cell_t)x
 /* ^ Double typecast to ignore warnings from code field pointers */
 #define P(n) f_##n##_c /* P(rimitive), 1 cell */
-#define XT(n) f_##n.xt
+#define X(n) f_##n.xt
 #define NP(n) P(docol),F(f_##n.xt) /* N(on)P(rimitive), 2 cells */
 #define LT(x) P(lit),F(x) /* L(i)T(eral), 2 cells */
 
-FORTHWORD(NULL,2,"\0021+",oneplus,4) {
-	LT(1),P(add),P(exit)
-} ENDWORD
-FORTHWORD(NULL,0,"\000",prog,5) {
-	P(cell),LT(XT(oneplus)),P(execute),P(bye)
+FORTHWORD(NULL,0,"\000",prog,4) {
+	LT('M'),P(emit),P(bye)
 } ENDWORD
 
-#define END(s) &s[sizeof(s)/sizeof(s[0])]
+#define ENDOF(s) &s[sizeof(s)/sizeof(s[0])]
 cell_t stack[1024];
 cell_t rstack[1024];
 int main()/*(int argc,char *argv[])*/
 {
-	next(XT(prog),END(stack),END(rstack));
+	next(X(prog),ENDOF(stack),ENDOF(rstack));
 	return 0;
 }
