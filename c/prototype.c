@@ -66,6 +66,13 @@ struct { \
 
 #define ENDWORD };
 
+#define L(x) (func_t)(cell_t)x /* L(iteral), 1 cell */
+/* ^ Double typecast to ignore warnings from code field pointers */
+#define P(n) f_##n##_c /* (Do) P(rimitive), 1 cell */
+#define X(n) f_##n.xt
+#define NP(n) P(docol),L(X(n)) /* (Do) N(on)P(rimitive), 2 cells */
+#define PL(x) P(lit),L(x) /* P(ush) L(iteral), 2 cells */
+/* ^^^ Number of characters in macro name = number of cells. */
 
 /*________ VM instructions ________*/
 
@@ -299,6 +306,19 @@ CWORD(&f_rshift.link,4,"\004/MOD",divmod)
 	next(ip,sp,rp);
 }
 
+#define F_1OP(op) { \
+	sp[0]=op sp[0]; \
+	next(ip,sp,rp); \
+}
+CWORD(&f_divmod.link,6,"\006NEGATE",negate)
+	F_1OP(-)
+CWORD(&f_negate.link,6,"\006INVERT",invert)
+	F_1OP(~)
+CWORD(&f_invert.link,2,"\0061+",incr)
+	F_1OP(1+)
+CWORD(&f_incr.link,2,"\006INVERT",decr)
+	F_1OP(1-)
+
 /*________ Comparisons  ________*/
 
 #define F_CMP(op,t) { \
@@ -307,7 +327,7 @@ CWORD(&f_rshift.link,4,"\004/MOD",divmod)
 	next(ip,sp,rp); \
 }
 
-CWORD(&f_divmod.link,1,"\001=",eq)
+CWORD(&f_decr.link,1,"\001=",eq)
 	F_CMP(==,cell_t)
 CWORD(&f_eq.link,1,"\001<",lt)
 	F_CMP(<,cell_t)
@@ -436,6 +456,10 @@ CWORD(&f_word.link,7,"\007>NUMBER",to_number)
 	next(ip,sp,rp);
 }
 
+FORTHWORD(&f_to_number.link,5,"\005COUNT",count,5) {
+	P(dup),P(incr),P(swap),P(cfetch),P(exit)
+} ENDWORD
+
 /*________ Data Segment Setup ________*/
 
 #define DATA_SEG_INC (1<<16)
@@ -446,11 +470,20 @@ void init_data_seg(void)
 	sbrk(DATA_SEG_INC);
 }
 
-CWORD(&f_to_number.link,5,"\005ALLOT",allot)
+CWORD(&f_count.link,5,"\005ALLOT",allot)
 {
 	here+=pop(sp);
 	next(ip,sp,rp);
 }
+
+void f_here_c(func_t *,cell_t *,cell_t *);
+/* ^ Forward declaration needed by , and C, */
+FORTHWORD(&f_allot.link,1,"\001,",comma,6) {
+	P(here),P(store),PL(sizeof(cell_t)),P(allot),P(exit)
+} ENDWORD
+FORTHWORD(&f_comma.link,2,"\002C,",ccomma,6) {
+	P(here),P(cstore),PL(1),P(allot),P(exit)
+} ENDWORD
 
 /*________ Constants ________*/
 
@@ -459,7 +492,7 @@ CWORD(&f_to_number.link,5,"\005ALLOT",allot)
 	next(ip,sp,rp); \
 }
 
-CWORD(&f_allot.link,4,"\004CELL",cell)
+CWORD(&f_ccomma.link,4,"\004CELL",cell)
 	F_CONST(sizeof(cell_t))
 CWORD(&f_cell.link,3,"\003>IN",in)
 	F_CONST(&nextkey)
@@ -477,16 +510,10 @@ link_t *latest=&f_latest.link;
 
 /*________ Entry ________*/
 
-#define L(x) (func_t)(cell_t)x /* L(iteral), 1 cell */
-/* ^ Double typecast to ignore warnings from code field pointers */
-#define P(n) f_##n##_c /* (Do) P(rimitive), 1 cell */
-#define X(n) f_##n.xt
-#define NP(n) P(docol),L(f_##n.xt) /* (Do) N(on)P(rimitive), 2 cells */
-#define PL(x) P(lit),L(x) /* P(ush) L(iteral), 2 cells */
-/* ^^^ Number of characters in macro name = number of cells. */
 
-FORTHWORD(NULL,0,"\000",prog,6) {
-	PL('M'),P(emit),P(branch),L(-4),P(bye)
+/*PL('M'),P(emit),P(branch),L(-4),P(bye)*/
+FORTHWORD(NULL,0,"\000",prog,10) {
+	PL(1),NP(comma),P(here),PL(sizeof(cell_t)),P(sub),P(fetch),P(bye)
 } ENDWORD
 
 #define ENDOF(s) &s[sizeof(s)/sizeof(s[0])]
