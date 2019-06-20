@@ -377,6 +377,39 @@ CWORD(&f_key.link,4,"\004WORD",word)
 	next(ip,sp,rp);
 }
 
+cell_t base=10;
+CWORD(&f_word.link,7,"\007>NUMBER",to_number)
+{
+	size_t len=pop(sp);
+	char *str=(char *)pop(sp);
+	cell_t tot=pop(sp);
+	cell_t b=base;
+	unsigned int neg=str[0]=='-';
+	str+=neg;
+	len-=neg;
+	while (len>0) {
+		char d=str[0];
+		d-='0';
+		if (d<0)
+			break;
+		else if (d>10) {
+			d-='A'-'0'-10;
+			if (d<0||d>b)
+				break;
+		}
+		tot=tot*b+d;
+		++str;
+		--len;
+	}
+	if (neg)
+		tot=-tot;
+	push(sp,tot);
+	push(sp,str);
+	push(sp,len);
+	return; /*******************/
+	next(ip,sp,rp);
+}
+
 /*________ Constants ________*/
 
 #define F_CONST(val) { \
@@ -390,6 +423,8 @@ CWORD(&f_cell.link,3,"\003>IN",in)
 	F_CONST(&nextkey)
 CWORD(&f_in.link,9,"\011SOURCE-ID",source_id)
 	F_CONST(source_id)
+CWORD(&f_source_id.link,4,"\004BASE",base)
+	F_CONST(base)
 
 /*________ Entry ________*/
 
@@ -410,6 +445,16 @@ cell_t stack[1024];
 cell_t rstack[1024];
 int main()/*(int argc,char *argv[])*/
 {
+	/*
 	next(X(prog),ENDOF(stack),ENDOF(rstack));
-	return 0;
+	*/
+	cell_t *sp=ENDOF(stack),*rp=ENDOF(rstack);
+	char *s=word();
+	int l=s[0];
+	s++;
+	push(sp,0);
+	push(sp,s);
+	push(sp,l);
+	f_to_number_c(NULL,sp,rp);
+	return sp[2];
 }
