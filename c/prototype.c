@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include <unistd.h>
 #include <stdint.h>
 
@@ -435,6 +436,22 @@ CWORD(&f_word.link,7,"\007>NUMBER",to_number)
 	next(ip,sp,rp);
 }
 
+/*________ Data Segment Setup ________*/
+
+#define DATA_SEG_INC (1<<16)
+char *here=NULL;
+void init_data_seg(void)
+{
+	here=sbrk(0);
+	sbrk(DATA_SEG_INC);
+}
+
+CWORD(&f_to_number.link,5,"\005ALLOT",allot)
+{
+	here+=pop(sp);
+	next(ip,sp,rp);
+}
+
 /*________ Constants ________*/
 
 #define F_CONST(val) { \
@@ -442,7 +459,7 @@ CWORD(&f_word.link,7,"\007>NUMBER",to_number)
 	next(ip,sp,rp); \
 }
 
-CWORD(&f_word.link,4,"\004CELL",cell)
+CWORD(&f_allot.link,4,"\004CELL",cell)
 	F_CONST(sizeof(cell_t))
 CWORD(&f_cell.link,3,"\003>IN",in)
 	F_CONST(&nextkey)
@@ -450,6 +467,13 @@ CWORD(&f_in.link,9,"\011SOURCE-ID",source_id)
 	F_CONST(source_id)
 CWORD(&f_source_id.link,4,"\004BASE",base)
 	F_CONST(base)
+CWORD(&f_base.link,4,"\004HERE",here)
+	F_CONST(here)
+
+link_t *latest;
+CWORD(&f_here.link,6,"\006LATEST",latest)
+	F_CONST(&latest)
+link_t *latest=&f_latest.link;
 
 /*________ Entry ________*/
 
@@ -470,6 +494,7 @@ cell_t stack[1024];
 cell_t rstack[1024];
 int main()/*(int argc,char *argv[])*/
 {
+	init_data_seg();
 	next(X(prog),ENDOF(stack),ENDOF(rstack));
 	return 0;
 }
