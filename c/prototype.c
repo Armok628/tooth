@@ -1,6 +1,7 @@
 #define _DEFAULT_SOURCE
 #include <unistd.h>
 #include <stdint.h>
+#include <string.h>
 
 /*
  * 		Type definitions
@@ -26,6 +27,7 @@ typedef struct link_s {
 
 /* For C89, need to manually define bool */
 typedef enum {false,true} bool;
+enum {F_IMM=0x80,F_HID=0x40};
 
 /*
  * 		CWORD macro
@@ -74,7 +76,7 @@ struct { \
 #define PL(x) P(lit),L(x) /* P(ush) L(iteral), 2 cells */
 /* ^^^ Number of characters in macro name = number of cells. */
 
-/*________ VM instructions ________*/
+/******** VM instructions ********/
 
 
 /*
@@ -161,7 +163,7 @@ CWORD(&f_bye.link,7,"\007EXECUTE",execute)
 	next(ip,sp,rp);
 }
 
-/*________ Branching ________*/
+/******** Branching ********/
 
 CWORD(&f_execute.link,6,"\006BRANCH",branch)
 {
@@ -175,7 +177,7 @@ CWORD(&f_branch.link,7,"\0070BRANCH",zbranch)
 	next(ip,sp,rp);
 }
 
-/*________ Parameter Stack Manipulation ________*/
+/******** Parameter Stack Manipulation ********/
 
 CWORD(&f_zbranch.link,3,"\003DUP",dup)
 {
@@ -232,7 +234,7 @@ CWORD(&f_over.link,4,"\004-ROT",unrot)
 	next(ip,sp,rp);
 }
 
-/*________ Return Stack Manipulation ________*/
+/******** Return Stack Manipulation ********/
 
 
 CWORD(&f_unrot.link,2,"\002R@",rfetch)
@@ -251,7 +253,7 @@ CWORD(&f_to_r.link,2,"\002R>",r_from)
 	next(ip,sp,rp);
 }
 
-/*________ Memory Access ________*/
+/******** Memory Access ********/
 
 CWORD(&f_r_from.link,1,"\001@",fetch)
 {
@@ -275,7 +277,7 @@ CWORD(&f_cfetch.link,2,"\002C!",cstore)
 	next(ip,sp+2,rp);
 }
 
-/*________ Arithmetic ________*/
+/******** Arithmetic ********/
 
 #define F_2OP(op) { \
 	register cell_t b=pop(sp),a=pop(sp); \
@@ -319,7 +321,7 @@ CWORD(&f_invert.link,2,"\0061+",incr)
 CWORD(&f_incr.link,2,"\006INVERT",decr)
 	F_1OP(1-)
 
-/*________ Comparisons  ________*/
+/******** Comparisons  ********/
 
 #define F_CMP(op,t) { \
 	register t b=pop(sp),a=pop(sp); \
@@ -349,7 +351,7 @@ CWORD(&f_ugt.link,3,"\003U<=",ulte)
 CWORD(&f_ulte.link,3,"\003U>=",ugte)
 	F_CMP(>=,ucell_t)
 
-/*________ I/O ________*/
+/******** I/O ********/
 
 CWORD(&f_ugte.link,4,"\004EMIT",emit)
 {
@@ -412,6 +414,8 @@ char *word(void)
 	static char wordbuf[WORDBUF_SIZE];
 	int i=0;
 	char c=key();
+	while (c<=' ')
+		c=key();
 	while (c>' ') {
 		wordbuf[++i]=c;
 		c=key();
@@ -460,7 +464,7 @@ FORTHWORD(&f_to_number.link,5,"\005COUNT",count,5) {
 	P(dup),P(incr),P(swap),P(cfetch),P(exit)
 } ENDWORD
 
-/*________ Data Segment Setup ________*/
+/******** Data Segment Setup ********/
 
 #define DATA_SEG_INC (1<<16)
 char *here=NULL;
@@ -485,14 +489,54 @@ FORTHWORD(&f_comma.link,2,"\002C,",ccomma,6) {
 	P(here),P(cstore),PL(1),P(allot),P(exit)
 } ENDWORD
 
-/*________ Constants ________*/
+/******** Dictionary Search ********/
+
+link_t *latest;
+void find(char *cs,cell_t *sp)
+{
+	char *n;
+	cell_t l,len=cs[0];
+	link_t *link=latest;
+	for (;link;link=link->prev) {
+		int i;
+		l=link->len;
+		if (l&F_HID)
+			continue;
+		if ((l&~F_IMM)!=len)
+			continue;
+		n=link->name;
+		for (i=1;i<=len;i++)
+			if (n[i]!=cs[i])
+				goto CONT;
+		push(sp,&((func_t *)link)[3]);
+		push(sp,l&F_IMM?1:-1);
+		return;
+CONT:		continue;
+	}
+	push(sp,cs);
+	push(sp,0);
+}
+CWORD(&f_ccomma.link,4,"\004FIND",find)
+{
+	char *cs=(char *)pop(sp);
+	find(cs,sp);
+	next(ip,sp-2,rp);
+}
+CWORD(&f_find.link,1,"\001'",tick)
+{
+	char *cs=word();
+	find(cs,sp);
+	next(ip,sp-1,rp);
+}
+
+/******** Constants ********/
 
 #define F_CONST(val) { \
 	push(sp,val); \
 	next(ip,sp,rp); \
 }
 
-CWORD(&f_ccomma.link,4,"\004CELL",cell)
+CWORD(&f_tick.link,4,"\004CELL",cell)
 	F_CONST(sizeof(cell_t))
 CWORD(&f_cell.link,3,"\003>IN",in)
 	F_CONST(&nextkey)
@@ -503,17 +547,14 @@ CWORD(&f_source_id.link,4,"\004BASE",base)
 CWORD(&f_base.link,4,"\004HERE",here)
 	F_CONST(here)
 
-link_t *latest;
 CWORD(&f_here.link,6,"\006LATEST",latest)
 	F_CONST(&latest)
 link_t *latest=&f_latest.link;
 
-/*________ Entry ________*/
+/******** Entry ********/
 
-
-/*PL('M'),P(emit),P(branch),L(-4),P(bye)*/
-FORTHWORD(NULL,0,"\000",prog,10) {
-	PL(1),NP(comma),P(here),PL(sizeof(cell_t)),P(sub),P(fetch),P(bye)
+FORTHWORD(NULL,0,"\000",prog,4) {
+	P(tick),P(execute),P(branch),L(-3)
 } ENDWORD
 
 #define ENDOF(s) &s[sizeof(s)/sizeof(s[0])]
