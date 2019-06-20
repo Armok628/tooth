@@ -284,19 +284,19 @@ CWORD(&f_cfetch.link,2,"\002C!",cstore)
 	push(sp,a op b); \
 	next(ip,sp,rp); \
 }
-CWORD(&f_cfetch.link,1,"\001+",add)
+CWORD(&f_cstore.link,1,"\001+",add)
 	F_2OP(+)
 CWORD(&f_add.link,1,"\001-",sub)
 	F_2OP(-)
 CWORD(&f_sub.link,1,"\001*",mul)
 	F_2OP(*)
-CWORD(&f_sub.link,3,"\001AND",and)
+CWORD(&f_mul.link,3,"\001AND",and)
 	F_2OP(&)
-CWORD(&f_sub.link,2,"\001OR",or)
+CWORD(&f_and.link,2,"\001OR",or)
 	F_2OP(|)
-CWORD(&f_sub.link,3,"\001XOR",xor)
+CWORD(&f_or.link,3,"\001XOR",xor)
 	F_2OP(^)
-CWORD(&f_mul.link,6,"\006LSHIFT",lshift)
+CWORD(&f_xor.link,6,"\006LSHIFT",lshift)
 	F_2OP(<<)
 CWORD(&f_lshift.link,6,"\006RSHIFT",rshift)
 	F_2OP(>>)
@@ -368,7 +368,7 @@ cell_t source_id=0;
 size_t nextkey;
 size_t keycount;
 
-CWORD(&f_ugte.link,8,"\010EVALUATE",evaluate)
+CWORD(&f_emit.link,8,"\010EVALUATE",evaluate)
 {
 	keycount=(size_t)pop(sp);
 	source=(char *)pop(sp);
