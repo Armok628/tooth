@@ -243,6 +243,30 @@ CWORD(&f_to_r.link,2,"\002R>",r_from)
 	next(ip,sp,rp);
 }
 
+/*________ Memory Access ________*/
+
+CWORD(&f_r_from.link,1,"\001@",fetch)
+{
+	sp[0]=*(cell_t *)sp[0];
+	next(ip,sp,rp);
+}
+CWORD(&f_fetch.link,1,"\001!",store)
+{
+	*(cell_t *)sp[0]=sp[1];
+	next(ip,sp+2,rp);
+}
+
+CWORD(&f_store.link,2,"\002C@",cfetch)
+{
+	sp[0]=*(char *)sp[0];
+	next(ip,sp,rp);
+}
+CWORD(&f_cfetch.link,2,"\002C!",cstore)
+{
+	*(char *)sp[0]=(char)sp[1];
+	next(ip,sp+2,rp);
+}
+
 /*________ Arithmetic ________*/
 
 #define F_2OP(op) { \
@@ -250,7 +274,7 @@ CWORD(&f_to_r.link,2,"\002R>",r_from)
 	push(sp,a op b); \
 	next(ip,sp,rp); \
 }
-CWORD(&f_r_from.link,1,"\001+",add)
+CWORD(&f_cfetch.link,1,"\001+",add)
 	F_2OP(+)
 CWORD(&f_add.link,1,"\001-",sub)
 	F_2OP(-)
