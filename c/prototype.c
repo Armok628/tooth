@@ -393,15 +393,16 @@ CWORD(&f_in.link,9,"\011SOURCE-ID",source_id)
 
 /*________ Entry ________*/
 
-#define F(x) (func_t)(cell_t)x
+#define L(x) (func_t)(cell_t)x /* L(iteral), 1 cell */
 /* ^ Double typecast to ignore warnings from code field pointers */
-#define P(n) f_##n##_c /* P(rimitive), 1 cell */
+#define P(n) f_##n##_c /* (Do) P(rimitive), 1 cell */
 #define X(n) f_##n.xt
-#define NP(n) P(docol),F(f_##n.xt) /* N(on)P(rimitive), 2 cells */
-#define LT(x) P(lit),F(x) /* L(i)T(eral), 2 cells */
+#define NP(n) P(docol),L(f_##n.xt) /* (Do) N(on)P(rimitive), 2 cells */
+#define PL(x) P(lit),L(x) /* P(ush) L(iteral), 2 cells */
+/* ^^^ Number of characters in macro name = number of cells. */
 
-FORTHWORD(NULL,0,"\000",prog,4) {
-	LT('M'),P(emit),P(bye)
+FORTHWORD(NULL,0,"\000",prog,6) {
+	PL('M'),P(emit),P(branch),L(-4),P(bye)
 } ENDWORD
 
 #define ENDOF(s) &s[sizeof(s)/sizeof(s[0])]
