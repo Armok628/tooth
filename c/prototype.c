@@ -1,7 +1,6 @@
 #define _DEFAULT_SOURCE
 #include <unistd.h>
 #include <stdint.h>
-#include <string.h>
 
 /*
  * 		Type definitions
