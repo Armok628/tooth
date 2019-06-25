@@ -72,7 +72,7 @@ struct { \
 #define X(n) f_##n.xt
 #define C(x) (x*sizeof(cell_t))
 #define P(n) f_##n##_c /* (Do) P(rimitive), 1 cell */
-#define NP(n) P(docol),L(X(n)) /* (Do) N(on)P(rimitive), 2 cells */
+#define NP(n) docol,L(X(n)) /* (Do) N(on)P(rimitive), 2 cells */
 #define PL(x) P(lit),L(x) /* P(ush) L(iteral), 2 cells */
 /* ^^^ Number of characters in macro name = number of cells. */
 
@@ -103,6 +103,21 @@ void next(func_t *ip,cell_t *sp,cell_t *rp)
 }
 
 /*
+ *		docol
+ * docol executes the code field pointer next in the code field.
+ * A pointer to docol must come before any non-primitive XT.
+ * It is _not_ necessary at the beginning of any code fields.
+ * N.B.: This behavior is different from normal ITC compilers
+ */
+
+void docol(func_t *ip,cell_t *sp,cell_t *rp)
+{
+	push(rp,ip+1);
+	ip=*(func_t **)ip;
+	next(ip,sp,rp);
+}
+
+/*
  *		exit
  * A function pointer to f_exit_c should be at the end of _all_ code fields.
  * A word with exit in cell two of its code field is a "code word".
@@ -116,26 +131,11 @@ CWORD(NULL,4,"\004EXIT",exit)
 }
 
 /*
- *		docol
- * f_docol_c executes the code field pointer next in the code field.
- * A pointer to f_docol_c must come before any non-primitive XT.
- * It is _not_ necessary at the beginning of any code fields.
- * N.B.: This behavior is different from normal ITC compilers
- */
-
-CWORD(&f_exit.link,5,"\005DOCOL",docol)
-{
-	push(rp,ip+1);
-	ip=*(func_t **)ip;
-	next(ip,sp,rp);
-}
-
-/*
  * 		lit
  * f_lit_c will place the cell after it in the code field onto the stack.
  */
 
-CWORD(&f_docol.link,3,"\004LIT",lit)
+CWORD(&f_exit.link,3,"\004LIT",lit)
 {
 	push(sp,*ip);
 	next(ip+1,sp,rp);
@@ -174,9 +174,9 @@ CWORD(&f_execute.link,6,"\006BRANCH",branch)
 CWORD(&f_branch.link,7,"\0070BRANCH",zbranch)
 {
 	if (pop(sp))
-		ip=(func_t *)((char *)ip+*(cell_t *)ip);
-	else
 		ip++;
+	else
+		ip=(func_t *)((char *)ip+*(cell_t *)ip);
 	next(ip,sp,rp);
 }
 
@@ -322,7 +322,7 @@ CWORD(&f_negate.link,6,"\006INVERT",invert)
 CWORD(&f_invert.link,2,"\0061+",incr)
 	F_1OP(1+)
 CWORD(&f_incr.link,2,"\006INVERT",decr)
-	F_1OP(1-)
+	F_1OP(-1+)
 
 /******** Comparisons  ********/
 
@@ -491,6 +491,13 @@ FORTHWORD(&f_allot.link,1,"\001,",comma,6) {
 FORTHWORD(&f_comma.link,2,"\002C,",ccomma,6) {
 	P(here),P(cstore),PL(1),P(allot),P(exit)
 } ENDWORD
+FORTHWORD(&f_ccomma.link,7,"\007ALIGNED",aligned,8) {
+	P(decr),PL(~(sizeof(cell_t)-1)),P(and),PL(sizeof(cell_t)),P(add),P(exit)
+} ENDWORD
+FORTHWORD(&f_aligned.link,5,"\005ALIGN",align,7) {
+	P(here),NP(aligned),P(here),P(sub),P(allot),P(exit)
+} ENDWORD
+
 
 /******** Dictionary Search ********/
 
@@ -519,7 +526,7 @@ CONT:		continue;
 	push(sp,cs);
 	push(sp,0);
 }
-CWORD(&f_ccomma.link,4,"\004FIND",find)
+CWORD(&f_align.link,4,"\004FIND",find)
 {
 	char *cs=(char *)pop(sp);
 	find(cs,sp);
@@ -549,15 +556,23 @@ CWORD(&f_source_id.link,4,"\004BASE",base)
 	F_CONST(base)
 CWORD(&f_base.link,4,"\004HERE",here)
 	F_CONST(here)
+CWORD(&f_here.link,5,"\005DOCOL",docol)
+	F_CONST(docol)
 
-CWORD(&f_here.link,6,"\006LATEST",latest)
+CWORD(&f_docol.link,6,"\006LATEST",latest)
 	F_CONST(&latest)
 link_t *latest=&f_latest.link;
 
 /******** Entry ********/
 
-FORTHWORD(NULL,0,"\000",prog,4) {
-	P(tick),P(execute),P(branch),L(C(-3))
+FORTHWORD(NULL,0,"\000",prog,27) {
+	P(word),P(find),P(zbranch),L(C(4)),
+	P(execute),P(branch),L(C(-6)),
+	PL(0),P(swap),NP(count),P(to_number),P(zbranch),L(C(3)),
+	P(branch),L(C(4)),
+	P(drop),P(branch),L(C(-19)),
+	P(drop),P(drop),PL('?'),P(emit),
+	P(branch),L(C(-26))
 } ENDWORD
 
 #define EOS(s) &s[sizeof(s)/sizeof(s[0])]
