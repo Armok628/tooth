@@ -69,8 +69,9 @@ struct { \
 
 #define L(x) (func_t)(cell_t)x /* L(iteral), 1 cell */
 /* ^ Double typecast to ignore warnings from code field pointers */
-#define P(n) f_##n##_c /* (Do) P(rimitive), 1 cell */
 #define X(n) f_##n.xt
+#define C(x) (x*sizeof(cell_t))
+#define P(n) f_##n##_c /* (Do) P(rimitive), 1 cell */
 #define NP(n) P(docol),L(X(n)) /* (Do) N(on)P(rimitive), 2 cells */
 #define PL(x) P(lit),L(x) /* P(ush) L(iteral), 2 cells */
 /* ^^^ Number of characters in macro name = number of cells. */
@@ -85,8 +86,8 @@ struct { \
  * As a result, sp[n] should always be nth item from TOS.
  */
 
-#define push(sp,val) (*(--sp)=(cell_t)(val))
-#define pop(sp) (*(sp++))
+#define push(s,v) (*(--s)=(cell_t)(v))
+#define pop(s) (*(s++))
 
 /*
  *		next
@@ -166,13 +167,16 @@ CWORD(&f_bye.link,7,"\007EXECUTE",execute)
 
 CWORD(&f_execute.link,6,"\006BRANCH",branch)
 {
-	ip+=(cell_t)*ip;
+	ip=(func_t *)((char *)ip+*(cell_t *)ip);
 	next(ip,sp,rp);
 }
 
 CWORD(&f_branch.link,7,"\0070BRANCH",zbranch)
 {
-	ip+=pop(sp)?(cell_t)*ip:1;
+	if (pop(sp))
+		ip=(func_t *)((char *)ip+*(cell_t *)ip);
+	else
+		ip++;
 	next(ip,sp,rp);
 }
 
@@ -553,15 +557,15 @@ link_t *latest=&f_latest.link;
 /******** Entry ********/
 
 FORTHWORD(NULL,0,"\000",prog,4) {
-	P(tick),P(execute),P(branch),L(-3)
+	P(tick),P(execute),P(branch),L(C(-3))
 } ENDWORD
 
-#define ENDOF(s) &s[sizeof(s)/sizeof(s[0])]
+#define EOS(s) &s[sizeof(s)/sizeof(s[0])]
 cell_t stack[1024];
 cell_t rstack[1024];
 int main()/*(int argc,char *argv[])*/
 {
 	init_data_seg();
-	next(X(prog),ENDOF(stack),ENDOF(rstack));
+	next(X(prog),EOS(stack),EOS(rstack));
 	return 0;
 }
