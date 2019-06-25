@@ -488,7 +488,12 @@ void f_here_c(func_t *,cell_t *,cell_t *);
 FORTHWORD(&f_allot.link,1,"\001,",comma,6) {
 	P(here),P(store),PL(sizeof(cell_t)),P(allot),P(exit)
 } ENDWORD
-FORTHWORD(&f_comma.link,2,"\002C,",ccomma,6) {
+FORTHWORD(&f_comma.link,8,"\010COMPILE,",compile,21) {
+	P(dup),PL(sizeof(cell_t)),P(add),P(fetch),PL(f_exit_c),P(eq),P(zbranch),L(C(5)),
+	P(fetch),NP(comma),P(exit),
+	PL(docol),NP(comma),NP(comma),P(exit)
+} ENDWORD
+FORTHWORD(&f_compile.link,2,"\002C,",ccomma,6) {
 	P(here),P(cstore),PL(1),P(allot),P(exit)
 } ENDWORD
 FORTHWORD(&f_ccomma.link,7,"\007ALIGNED",aligned,8) {
