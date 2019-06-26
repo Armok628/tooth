@@ -319,9 +319,9 @@ CWORD(&f_divmod.link,6,"\006NEGATE",negate)
 	F_1OP(-)
 CWORD(&f_negate.link,6,"\006INVERT",invert)
 	F_1OP(~)
-CWORD(&f_invert.link,2,"\0061+",incr)
+CWORD(&f_invert.link,2,"\0021+",incr)
 	F_1OP(1+)
-CWORD(&f_incr.link,2,"\006INVERT",decr)
+CWORD(&f_incr.link,2,"\0021-",decr)
 	F_1OP(-1+)
 
 /******** Comparisons  ********/
