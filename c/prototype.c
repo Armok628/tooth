@@ -72,8 +72,8 @@ struct { \
 #define X(n) f_##n.xt
 #define C(x) (x*sizeof(cell_t))
 #define P(n) f_##n##_c /* (Do) P(rimitive), 1 cell */
-#define NP(n) docol,L(X(n)) /* (Do) N(on)P(rimitive), 2 cells */
-#define PL(x) P(lit),L(x) /* P(ush) L(iteral), 2 cells */
+#define NP(n) f_docol_c,L(X(n)) /* (Do) N(on)P(rimitive), 2 cells */
+#define PL(x) f_dolit_c,L(x) /* P(ush) L(iteral), 2 cells */
 /* ^^^ Number of characters in macro name = number of cells. */
 
 /******** VM instructions ********/
@@ -103,21 +103,6 @@ void next(func_t *ip,cell_t *sp,cell_t *rp)
 }
 
 /*
- *		docol
- * docol executes the code field pointer next in the code field.
- * A pointer to docol must come before any non-primitive XT.
- * It is _not_ necessary at the beginning of any code fields.
- * N.B.: This behavior is different from normal ITC compilers
- */
-
-void docol(func_t *ip,cell_t *sp,cell_t *rp)
-{
-	push(rp,ip+1);
-	ip=*(func_t **)ip;
-	next(ip,sp,rp);
-}
-
-/*
  *		exit
  * A function pointer to f_exit_c should be at the end of _all_ code fields.
  * A word with exit in cell two of its code field is a "code word".
@@ -131,11 +116,26 @@ CWORD(NULL,4,"\004EXIT",exit)
 }
 
 /*
- * 		lit
- * f_lit_c will place the cell after it in the code field onto the stack.
+ *		docol
+ * f_docol_c executes the code field pointer next in the code field.
+ * A pointer to docol must come before any non-primitive XT.
+ * It is _not_ necessary at the beginning of any code fields.
+ * N.B.: This behavior is different from normal ITC compilers
  */
 
-CWORD(&f_exit.link,3,"\004LIT",lit)
+CWORD(&f_exit.link,5,"\005DOCOL",docol)
+{
+	push(rp,ip+1);
+	ip=*(func_t **)ip;
+	next(ip,sp,rp);
+}
+
+/*
+ * 		dolit
+ * f_dolit_c will place the cell after it in the code field onto the stack.
+ */
+
+CWORD(&f_exit.link,5,"\005DOLIT",dolit)
 {
 	push(sp,*ip);
 	next(ip+1,sp,rp);
@@ -145,7 +145,7 @@ CWORD(&f_exit.link,3,"\004LIT",lit)
  *		bye
  * For testing purposes, bye does not currently exhibit typical behavior.
  */
-CWORD(&f_lit.link,3,"\004BYE",bye)
+CWORD(&f_dolit.link,3,"\004BYE",bye)
 {
 	_exit(pop(sp)); /*_exit(0);*/
 	next(ip,sp,rp);
@@ -491,7 +491,7 @@ FORTHWORD(&f_allot.link,1,"\001,",comma,6) {
 FORTHWORD(&f_comma.link,8,"\010COMPILE,",compile,21) {
 	P(dup),PL(sizeof(cell_t)),P(add),P(fetch),PL(f_exit_c),P(eq),P(zbranch),L(C(5)),
 	P(fetch),NP(comma),P(exit),
-	PL(docol),NP(comma),NP(comma),P(exit)
+	PL(f_docol_c),NP(comma),NP(comma),P(exit)
 } ENDWORD
 FORTHWORD(&f_compile.link,2,"\002C,",ccomma,6) {
 	P(here),P(cstore),PL(1),P(allot),P(exit)
@@ -561,10 +561,10 @@ CWORD(&f_source_id.link,4,"\004BASE",base)
 	F_CONST(base)
 CWORD(&f_base.link,4,"\004HERE",here)
 	F_CONST(here)
-CWORD(&f_here.link,5,"\005DOCOL",docol)
-	F_CONST(docol)
+CWORD(&f_here.link,5,"\005F_IMM",f_imm)
+	F_CONST(F_IMM)
 
-CWORD(&f_docol.link,6,"\006LATEST",latest)
+CWORD(&f_f_imm.link,6,"\006LATEST",latest)
 	F_CONST(&latest)
 link_t *latest=&f_latest.link;
 
