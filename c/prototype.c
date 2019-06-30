@@ -53,7 +53,7 @@ void f_##cname##_c(func_t *ip,cell_t *sp,cell_t *rp)
 /*
  *		FORTHWORD/ENDWORD macros
  * Used to define assembler-compiled Forth words; same arguments as CWORD.
- * Parameter deflen represents number of given cells, not counting f_exit_c.
+ * Parameter deflen represents number of given cells, counting f_exit_c.
  * Defines a struct f_cname whose execution token is f_cname.xt.
  * Usage e.g.: FORTHWORD(...) {f_lit_c,(func_t)1,f_add_c,f_exit_c} ENDWORD
  */
